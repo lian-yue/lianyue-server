@@ -1,6 +1,4 @@
-# 基于 Koa2 的单用户博客
-
-# 基于 Koa2, React 的单页面 SPA 同构程序
+# 基于 Koa2 React 的单用户 SPA 同构博客
 
 # 安装
 ```
