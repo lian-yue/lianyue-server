@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+       <title><%= __CONFIG__.site.title %> - <%= __CONFIG__.site.description %></title>
+       <link><%= ctx.request.protocol %>:<%= __CONFIG__.site.uri %></link>
+       <description><%= __CONFIG__.site.description %></description>
+       <lastBuildDate><%= (results.length ? results[0].createdAt.toUTCString() : new Date.toUTCString()) %></lastBuildDate>
+       <atom:link href="<%= ctx.request.protocol %>:<%= __CONFIG__.site.uri %>/?view=rss" rel="self" />
+       <language>zh-CN</language>
+       <% results.forEach(function(post) { %>
+           <item>
+               <title><%= post.title %></title>
+               <link><%= ctx.request.protocol %>:<%= __CONFIG__.site.uri + post.uri %></link>
+               <pubDate><%= post.createdAt.toUTCString() %></pubDate>
+               <guid><%= ctx.request.protocol %>:<%= __CONFIG__.site.uri + post.uri %></guid>
+               <% post.tags.forEach(function(tag) { %>
+                    <%if (tag && tag.names && tag.names.length) { %>
+                        <category><%= tag.names[0] %></category>
+                    <% }  %>
+                <% }); %>
+                <description>
+                    <%= post.excerpt %>
+                    <%= '<p><a href="'+ ctx.request.protocol + ':' + __CONFIG__.site.uri + post.uri +'">继续阅读 »</a></p>' %>
+                </description>
+           </item>
+       <% }); %>
+   </channel>
+</rss>

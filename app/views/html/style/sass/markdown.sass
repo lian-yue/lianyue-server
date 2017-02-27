@@ -1,0 +1,109 @@
+.markdown
+  .storage-button
+    margin-top: 1rem
+  .markdown-editor
+    padding: 0
+
+
+.markdown-content
+  .toc:first-child
+    @include border-radius($border-radius)
+    float: right
+    background: $body-bg
+    padding: 1rem 1.4rem
+    padding-left: 2.4rem
+    margin-left: 1.4rem
+    margin-bottom: 1.5rem
+    border:  1px solid $border-color
+  .footnote
+    a:last-child
+      font-family: $font-family-serif
+  color: $gray-dark
+  max-width: 100%
+  overflow: hidden
+  img
+    max-width: 100%
+    padding: 0
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6
+    font-weight: 600
+    line-height: 1.25
+    margin-top: 1.2rem
+    margin-bottom: .8rem
+  h1,
+  h2
+    border-bottom: 1px solid $border-color
+    padding-bottom: 0.3rem
+    margin-bottom: 1rem
+  h1
+    font-size: 1.75rem
+  h2
+    font-size: 1.5rem
+  h3
+    font-size: 1.25rem
+  h4
+    font-size: 1rem
+  h5
+    font-size: .9rem
+  h6
+    font-size: .8rem
+  ul,
+  ol
+    margin-bottom: 1rem
+  li+li
+    margin-top: 0.25em
+  pre
+    padding: 1.2rem
+    margin-bottom: 1rem
+    background: $pre-bg
+  blockquote
+    @extend .blockquote
+    color: $gray
+    font-size: 1rem
+    >:last-child
+      margin-bottom: 0
+    >:first-child
+	    margin-top: 0
+  table
+    @extend .table
+  hr
+    border-top-width: 3px
+  iframe,
+  embed
+    display: block
+    margin-top: 1.2rem
+    margin-bottom: .8rem
+    width: 720px
+    height: 420px
+    max-width: 100%
+    max-height: 100%
+    border: 0
+  .task-list-item
+    list-style-type: none
+  .task-list-item-checkbox
+    margin: 0 0.2em 0.25em -1.6em
+    vertical-align: middle
+  >*:first-child
+    margin-top: 0 !important
+  >*:last-child
+    margin-bottom: 0 !important
+  .note
+    font-size: .8rem
+    vertical-align: top
+    position: relative
+    top: -0.4em
+  .footnotes
+    margin-top: 1.4rem
+    padding-top: 1.4rem
+    border-top: 1px solid $btn-secondary-border
+
+
+@include media-breakpoint-down(md)
+  .markdown-content
+    .toc:first-child
+      float: none
+      margin-left: 0
