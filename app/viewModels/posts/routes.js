@@ -16,7 +16,7 @@ router.get('/create', require('./create'));
 router.get('/:slug/update', require('./update'));
 
 
-router.get('/comments', require('./comments.js'));
+router.get('/comments', admin, require('./comments.js'));
 router.use('/:slug/comments', slug, require('./comments/routes').routes());
 router.get('/:slug', slug, require('./read'));
 

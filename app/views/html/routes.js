@@ -31,6 +31,9 @@ var getComponent = function(component, ...paths) {
 }
 
 function requireAuthentication(Component, isAdmin) {
+  if (Component.AuthenticatedComponent) {
+    return Component.AuthenticatedComponent
+  }
   class AuthenticatedComponent extends React.Component {
     static contextTypes = {
       router: React.PropTypes.object.isRequired,
@@ -61,20 +64,23 @@ function requireAuthentication(Component, isAdmin) {
     }
 
     render() {
-      return (
-        <div className="c-authentication">
-          {this.state.admin ? <Component {...this.props}/> : null}
-        </div>
-      )
+      if (this.state.admin) {
+        return <Component {...this.props}/>
+      }
+      return ''
     }
   }
-
   function mapStateToProps(state) {
     return {
       token: state.token,
     };
   }
-  return connect(mapStateToProps)(AuthenticatedComponent);
+
+  function mapDispatchToProps(dispatch) {
+    return {};
+  }
+  Component.AuthenticatedComponent = connect(mapStateToProps, mapDispatchToProps)(AuthenticatedComponent);
+  return Component.AuthenticatedComponent
 }
 
 

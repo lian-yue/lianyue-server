@@ -223,11 +223,11 @@ export default class LoginComponent extends Component {
                       <div className="comment-author"><img src={comment.avatar} className="avatar photo" /></div>
                       <div className="actions">
                         {this.props.token.admin ? (comment.deletedAt ? <a className="restore" href="#" rel="nofollow" onClick={this.onRestore(comment)}>恢复</a> : <a className="delete" href="#" rel="nofollow" onClick={this.onDelete(comment)}>删除</a>) : ''}
-                        {comment.post.comment ? <a className="reply" href="#" rel="nofollow" onClick={this.onReply(comment)}>回复</a> : ''}
+                        {comment.post && comment.post.comment ? <a className="reply" href="#" rel="nofollow" onClick={this.onReply(comment)}>回复</a> : ''}
                       </div>
                       <div className="text">
                         <span className="author vcard">{comment.author}</span>
-                        <span className="title">在 <Link to={comment.post.uri} title={comment.post.title}>{comment.post.title.length > 16 ? comment.post.title.substr(0, 13) + '...' : comment.post.title}</Link></span>
+                        {comment.post ? <span className="title">在 <Link to={comment.post.uri} title={comment.post.title}>{comment.post.title.length > 16 ? comment.post.title.substr(0, 13) + '...' : comment.post.title}</Link></span> : ''}
                         {says}
                         <span className="time"><time dateTime={createdAt} title={createdAt}>{moment(comment.createdAt).fromNow()}</time></span>
                       </div>

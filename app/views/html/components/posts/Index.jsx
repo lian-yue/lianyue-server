@@ -276,6 +276,8 @@ export default class IndexComponent extends Component {
             {title}
             {this.state.results.map((post) => {
               var createdAt = post.createdAt ? moment(post.createdAt).format() : ''
+              var content = post.excerpt || ''
+              content  += '<p><a href="'+ post.uri +'" class="more-link">继续阅读 »</a></p>'
               return (
                 <article key={post._id} className="post entry hentry"  itemScope itemType="http://schema.org/BlogPosting">
                   <header className="entry-header">
@@ -289,7 +291,7 @@ export default class IndexComponent extends Component {
                       </span>
                     </div>
                   </header>
-                  <View className="content entry-content" itemProp="articleBody" html={true}>{(post.excerpt || '') + '<p><a href="'+ post.uri +'" class="more-link">继续阅读 »</p>'}</View>
+                  {<View className="content entry-content" itemProp="articleBody" html={true}>{content}</View>}
                 </article>
               )
             })}

@@ -194,6 +194,7 @@ export default class AppComponent extends Component {
       email: 'mailto:' + site.email,
       feed: '//list.qq.com/cgi-bin/qf_invite?id=d6c226834b15d2103bb6920ba251390e2adf75fd96a25230',
     })
+    this.analytics()
   }
 
   componentDidUpdate(props) {
@@ -213,8 +214,18 @@ export default class AppComponent extends Component {
         document.body.className = document.body.className.replace(/\s*header-open\s*/, '')
       }, 30)
     }
+    if (this.props.location.pathname != props.location.pathname || this.props.location.search != props.location.search) {
+      this.analytics()
+    }
   }
 
+  // 统计代码
+  analytics() {
+    var script = document.createElement("script");
+    script.type = "text/javascript"
+    script.src = "//s5.cnzz.com/stat.php?id=1842933&web_id=1842933"
+    document.body.appendChild(script)
+  }
 
 
   errorClose = () => {

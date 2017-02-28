@@ -49,7 +49,7 @@ export default class EditorComponent extends Component {
       values.push('')
       values = values.join('\n')
     } else {
-      values = ' ' + values.join('\n') + ' '
+      values = values.join('\n')
     }
     editor.replaceSelection(values)
   }
