@@ -27,11 +27,7 @@ var schema = new Schema({
     validate: [
       {
         validator: function(name) {
-          name = name.toLocaleLowerCase()
-          if (__CONFIG__.retains.indexOf(name.substr(-1, 1) == 's' ? name.substr(0, -1) : name) != -1) {
-            return false;
-          }
-          return true;
+          return __CONFIG__.retain(name);
         },
         message: '标签"{VALUE}"被系统保留 ({PATH})',
       },

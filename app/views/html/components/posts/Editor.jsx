@@ -159,7 +159,7 @@ export default class EditorComponent extends Component {
               </div>
               <div className="form-group">
                 <label htmlFor="slug"  className="form-label">自定义地址: </label>
-                <input type="text" className="form-control"  name="slug" minLength="3" maxLength="32" pattern="^[0-9a-z_]{3,32}$"  id="slug" placeholder="只允许只用小写英文数字和下划线" value={this.state.slug || ''} onChange={this.onChange()} />
+                <input type="text" className="form-control"  name="slug" minLength="3" maxLength="32" pattern="^[0-9a-z_-]{3,32}$"  id="slug" placeholder="只允许只用小写英文数字和下划线" value={this.state.slug || ''} onChange={this.onChange()} />
               </div>
               <div className="form-group">
                 <label htmlFor="content" className="form-label">内容: </label>

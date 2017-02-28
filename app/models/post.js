@@ -13,17 +13,14 @@ var schema = new Schema({
 
     minlength: [3, 'Slug 长度不能少于 3 位或大于 32 字节'],
     maxlength: [32, 'Slug 长度不能少于 3 位或大于 32 字节'],
-    match: [/^[0-9a-z_]+$/, 'Slug 只允许使用小写英文，数字和 _'],
+    match: [/^[0-9a-z_-]+$/, 'Slug 只允许使用小写英文，数字和 _-'],
     set(value) {
       return value || undefined
     },
     validate: [
       {
         validator: function(slug) {
-          if (__CONFIG__.retains.indexOf(slug.substr(-1, 1) == 's' ? slug.substr(0, -1) : slug) != -1) {
-            return false;
-          }
-          return true;
+          return __CONFIG__.retain(slug);
         },
         message: 'Slug 名被系统保留 ({PATH})',
       },
