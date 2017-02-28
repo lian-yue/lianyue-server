@@ -268,7 +268,7 @@ export default class CommentComponent extends Component {
             }
 
             return (
-              <li key={comment._id}>
+              <li key={comment._id} className={comment.admin ? 'comment-admin' : ''}>
                 <header className="comment-meta">
                   <div className="comment-author"><img src={comment.avatar} className="avatar photo" /></div>
                   <div className="actions">
