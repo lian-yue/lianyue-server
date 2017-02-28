@@ -4,7 +4,7 @@
        <title><%= __CONFIG__.site.title %> - <%= __CONFIG__.site.description %></title>
        <link><%= ctx.request.protocol %>:<%= __CONFIG__.site.uri %></link>
        <description><%= __CONFIG__.site.description %></description>
-       <lastBuildDate><%= (results.length ? results[0].createdAt.toUTCString() : new Date.toUTCString()) %></lastBuildDate>
+       <lastBuildDate><%= (results.length ? results[0].createdAt.toUTCString() : (new Date('1970-01-02')).toUTCString()) %></lastBuildDate>
        <atom:link href="<%= ctx.request.protocol %>:<%= __CONFIG__.site.uri %>/?view=rss" rel="self" />
        <language>zh-CN</language>
        <% results.forEach(function(post) { %>
