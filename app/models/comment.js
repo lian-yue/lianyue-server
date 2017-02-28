@@ -38,6 +38,7 @@ var schema = new Schema({
 
   email: {
     type: String,
+    required: [true, '必须填写电子邮箱'],
     maxlength: [64, '电子邮箱长度不能大于 64 字节 {PATH}'],
     set(value) {
       return value || undefined
@@ -130,7 +131,13 @@ schema.set('toJSON', {
 
 
 schema.virtual('avatar').get(function() {
-  return '//cn.gravatar.com/avatar/'+  crypto.createHash('md5').update(this.get('email')).digest("hex") +'?s=50&r=pg&d=mm'
+  var md5
+  if (this.get('email')) {
+    md5 = crypto.createHash('md5').update(this.get('email')).digest("hex")
+  } else {
+    md5 = '34be3c7c0655313619d9b91a7e6f1ee6'
+  }
+  return '//cn.gravatar.com/avatar/'+  md5 +'?s=50&r=pg&d=mm'
 });
 
 
