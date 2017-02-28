@@ -3,6 +3,7 @@
 const debug = require('debug')('demo:server');
 const http  = require('http');
 const port  = normalizePort(process.env.PORT || '3000');
+const host  = process.env.HOST || '0.0.0.0'
 
 
 if (process.env.NODE_ENV == 'development') {
@@ -12,11 +13,10 @@ if (process.env.NODE_ENV == 'development') {
 } else {
   var app = require('../dist');
 }
-// app.set('port', port);
+
 const server = http.createServer(app.callback());
 
-// server.listen({port: '3000', host:'0.0.0.0'});
-server.listen(port);
+server.listen(port, host);
 server.on('error', onError);
 server.on('listening', onListening);
 
