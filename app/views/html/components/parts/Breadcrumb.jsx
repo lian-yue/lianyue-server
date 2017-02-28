@@ -2,9 +2,23 @@ import React, { PureComponent } from 'react'
 import { Link } from 'react-router'
 
 export default class BreadcrumbComponent extends PureComponent {
+  static contextTypes = {
+    router: React.PropTypes.object.isRequired,
+    onChange: React.PropTypes.func.isRequired,
+  }
+
+  onChange = this.context.onChange
+
+  state = {}
+
   onHeaderToggle(e) {
     e.preventDefault()
     document.body.className = document.body.className.replace(/\s*header-open\s*/, '') + ' header-open'
+  }
+
+  onSearch = (e) => {
+    e.preventDefault();
+    this.context.router.push('/?search=' + encodeURIComponent(this.state.search || ''));
   }
 
   render () {
@@ -25,9 +39,9 @@ export default class BreadcrumbComponent extends PureComponent {
           <li><Link to="/" rel="home"><i className="fa fa-home"></i>首页</Link></li>
           {li}
         </ol>
-        <form id="search-form" method="get" action="/">
+        <form id="search-form" method="get" action="/" onSubmit={this.onSearch}>
             <label htmlFor="search"><i className="fa fa-search fa-lg"></i><span>搜索:</span></label>
-            <input type="search" defaultValue="" id="search" className="form-control" name="search" onChange={this.onChange} placeholder="请输入关键字" required />
+            <input type="search" defaultValue="" id="search" className="form-control" name="search" onChange={this.onChange()} placeholder="请输入关键字" required />
             <button type="submit" className="btn btn-primary">搜索</button>
         </form>
       </div>
