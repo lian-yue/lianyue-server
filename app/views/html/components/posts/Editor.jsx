@@ -57,7 +57,7 @@ export default class EditorComponent extends Component {
 
 
   onAddTags = (e) => {
-    e.preventDefault()
+    e && e.preventDefault()
     var addTags = this.state.addTags || '';
     addTags = addTags.trim()
     if (!addTags) {
@@ -81,6 +81,7 @@ export default class EditorComponent extends Component {
       indexs.push(name)
       tags.push(name)
     }
+    this.state.tags = tags
     this.setState({tags, addTags:''})
   }
 
@@ -109,6 +110,7 @@ export default class EditorComponent extends Component {
     if (this.state.disabled) {
       return
     }
+    this.onAddTags()
     var slug = this.props.params.slug
     var body = {
       title: this.state.title,
