@@ -1,6 +1,6 @@
 {
   "name": "lianyue-server",
-  "version": "0.1.166",
+  "version": "0.1.168",
   "private": true,
   "author": "lianyue <admin@lianyue.org>",
   "description": "",
@@ -21,6 +21,7 @@
     "npm": ">= 3.0.0"
   },
   "dependencies": {
+    "babel-runtime": "^5.8.38",
     "codemirror": "^5.20.2",
     "consolidate": "^0.14.1",
     "cross-env": "^1.0.8",
@@ -34,7 +35,6 @@
     "koa-convert": "^1.2.0",
     "koa-router": "^7.0.1",
     "koa-static": "^3.0.0",
-    "log4js": "^0.6.37",
     "markdown-x": "^0.4.0-beta.2",
     "mmmagic": "^0.4.5",
     "moment": "^2.14.1",
@@ -51,7 +51,6 @@
     "request": "^2.74.0",
     "urllib": "^2.11.0",
     "validator": "^5.4.0",
-    "babel-runtime": "^5.8.38",
     "whatwg-fetch": "^1.0.0"
   },
   "devDependencies": {

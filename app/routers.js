@@ -12,7 +12,7 @@ if (process.env.NODE_ENV == "development") {
           delete require.cache[id];
         }
       });
-      __CONFIG__.logger && __CONFIG__.logger.debug('Delete require cache');
+      console.info('Delete require cache');
       require('./models')
     });
   })

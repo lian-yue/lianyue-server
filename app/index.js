@@ -298,7 +298,7 @@ app.use(async function(ctx, next) {
   await next()
   var ms = new Date - start;
   var userAgent = ctx.request.header['user-agent'] || '';
-  __CONFIG__.logger && __CONFIG__.logger.info(`${ctx.method} ${ctx.status} ${ctx.url} - ${ms}ms - ${ctx.request.ip} - ${userAgent}`);
+  console.log(`${ctx.method} ${ctx.status} ${ctx.url} - ${ms}ms - ${ctx.request.ip} - ${userAgent}`);
   ctx.set('X-Response-Time', ms + 'ms');
   ctx.set('X-Version', packageInfo.version);
   ctx.set('X-Author', packageInfo.author);
@@ -340,9 +340,9 @@ app.use(async function(ctx) {
 // 错误捕获
 app.on('error', function(err, ctx) {
   if (err.status >= 500) {
-    __CONFIG__.logger && __CONFIG__.logger.error('server error :', err, ctx);
-  } else if (app.env === 'development') {
-    __CONFIG__.logger && __CONFIG__.logger.error(err.message + ' - ' + ctx.url);
+    console.error('server error :', err, ctx);
+  } else {
+    console.warn(`${ctx.method} ${ctx.status} ${ctx.url} - ${ctx.request.ip} - ${err.message}`);
   }
 });
 
