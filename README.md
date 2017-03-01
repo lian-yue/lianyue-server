@@ -7,6 +7,8 @@ SPA
 同构
 MVVM 服务端+客户端端 都是
 View 高度 和 服务端分离 可以新增视图使用 Vuejs  移除 React
+Mongodb
+pm2
 
 
 # 安装
@@ -15,6 +17,19 @@ git@github.com:lian-yue/lianyue-server.git
 npm run build
 npm run start
 ```
+
+## 管理员密码
+打开 目录文件下的 `/config/admin.js` 修改密码保存 然后执行命令 `npm run restart`
+打开浏览器 http://localhost:3000/admin 登陆到管理员 然后出现 管理员 导航
+
+## 配置配置信息
+```
+/config/site.js     # 基本信息
+/config/storage.js  # 文件储存路径 和 url
+/config/mongodb.js  # 数据库信息
+```
+
+
 
 # 储存web端口需要安装
 https://github.com/lian-yue/lianyue-storage
