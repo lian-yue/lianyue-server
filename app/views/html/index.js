@@ -78,33 +78,29 @@ export default async function(ctx, relPath, state) {
   }
   ctx.body = ''
 
-  if (ctx.method != 'GET' && ctx.method != 'HEAD') {
+  if (!relPath || relPath === true || (ctx.method != 'GET' && ctx.method != 'HEAD')) {
     ctx.set("X-Content-Type-Options", 'nosniff');
     ctx.body = JSON.stringify(state);
     return
   }
 
 
-  if (ctx.status < 499) {
-    var {redirectLocation, renderProps} = await reactMatch(ctx.url);
-    if (redirectLocation) {
-      ctx.redirect(redirectLocation.pathname + redirectLocation.search)
-      return;
-    }
-
-    if (!renderProps) {
-      var e = new Error('React match is empty');
-      e.status = 500
-      throw e;
-    }
-
-    state = await render(ctx, renderProps, state)
-    relPath = 'index'
+  var {redirectLocation, renderProps} = await reactMatch(ctx.url);
+  if (redirectLocation) {
+    ctx.redirect(redirectLocation.pathname + redirectLocation.search)
+    return;
   }
 
+  if (!renderProps) {
+    var e = new Error('React match is empty');
+    e.status = 500
+    throw e;
+  }
+
+  state = await render(ctx, renderProps, state)
 
   ctx.type = 'text/html'
   state.ctx = ctx;
   state.cache = ctx.app.env != 'development'
-  ctx.body = await consolidate.ejs(path.join(__dirname, './', relPath + '.ejs'), state)
+  ctx.body = await consolidate.ejs(path.join(__dirname, './index.ejs'), state)
 }

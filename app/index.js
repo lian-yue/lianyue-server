@@ -159,7 +159,7 @@ app.context.render = async function(relPath, state) {
   }
   ctx.state.views.push(state)
 
-  if (!relPath) {
+  if (!relPath || relPath === true) {
     view = 'json';
   }
 
