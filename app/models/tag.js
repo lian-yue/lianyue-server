@@ -39,6 +39,9 @@ var schema = new Schema({
       },
       {
         validator: function(name) {
+          if (name.length != 24) {
+            return true
+          }
           try {
             new Types.ObjectId(name)
           } catch (e) {
@@ -205,10 +208,12 @@ schema.virtual('postUri').get(function() {
 
 schema.statics.findByTag = function(value, projection, callback) {
   value = String(value).replace(/\s+|[_\-]+/g, ' ').trim()
-  try {
-    value = new Types.ObjectId(value)
-    return this.findById(value, projection, callback)
-  } catch (e) {
+  if (value.length == 24) {
+    try {
+      value = new Types.ObjectId(value)
+      return this.findById(value, projection, callback)
+    } catch (e) {
+    }
   }
 
   if (/^[0-9a-zA-Z ]+$/.test(value)) {

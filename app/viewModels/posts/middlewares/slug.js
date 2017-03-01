@@ -3,9 +3,11 @@ import Post from '../../../models/post'
 const ObjectId = Types.ObjectId
 export default async (ctx, next) => {
   var id
-  try {
-    id = new ObjectId(ctx.params.slug)
-  } catch (e) {
+  if (ctx.params.slug.length == 24) {
+    try {
+      id = new ObjectId(ctx.params.slug)
+    } catch (e) {
+    }
   }
 
   var post;

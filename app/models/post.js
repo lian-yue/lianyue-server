@@ -26,6 +26,9 @@ var schema = new Schema({
       },
       {
         validator: function(slug) {
+          if (slug.length != 24) {
+            return true
+          }
           try {
             new Types.ObjectId(slug)
           } catch (e) {
