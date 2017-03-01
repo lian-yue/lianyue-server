@@ -10,7 +10,7 @@ export default async function(ctx) {
 
 
   var userAgent = (ctx.request.header['user-agent'] || '').toLocaleLowerCase()
-  if ((typeof ctx.query.record =='string' && !ctx.query.record) || userAgent.indexOf('googlebot') != -1 || userAgent.indexOf('spider') != -1) {
+  if ((typeof ctx.query.record =='string' && !ctx.query.record) || ctx.method != 'GET' || userAgent.indexOf('bot/') != -1 || userAgent.indexOf('http://') != -1 || userAgent.indexOf('https://') != -1 || userAgent.indexOf('spider') != -1) {
     // 机器人 或不记录
   } else {
     await Post.findByIdAndUpdate(post.get('_id'), {$inc:{'meta.views': 1}})
