@@ -185,7 +185,7 @@ schema.virtual('uri').get(function() {
   }
   var name = names[names.length -1]
   if (name && /^[0-9a-zA-Z ]+$/.test(name)) {
-    name = name.toLocaleLowerCase().replace(/ /g, '_')
+    name = name.toLocaleLowerCase().replace(/ /g, '-')
   } else {
     name = this.get('_id')
   }
@@ -199,7 +199,7 @@ schema.virtual('postUri').get(function() {
   }
   var name = names[names.length -1]
   if (name && /^[0-9a-zA-Z ]+$/.test(name)) {
-    name = name.toLocaleLowerCase().replace(/ /g, '_')
+    name = name.toLocaleLowerCase().replace(/ /g, '-')
   } else {
     name = this.get('_id')
   }
