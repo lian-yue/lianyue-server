@@ -287,7 +287,7 @@ export default class IndexComponent extends Component {
                     <div className="entry-meta">
                       <time className="entry-date" itemProp="datePublished" dateTime={createdAt} title={createdAt}>{createdAt ? moment(post.createdAt).fromNow() : ''}</time>
                       <span className="comments-link">
-                        <a href="#comments" rel="nofollow">{(post.meta.comments  ? post.meta.comments : 0) + '条评论'}</a>
+                        <Link href={post.uri + "#comments"} rel="nofollow">{(post.meta.comments  ? post.meta.comments : 0) + '条评论'}</Link>
                       </span>
                     </div>
                   </header>

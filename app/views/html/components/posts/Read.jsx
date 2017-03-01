@@ -266,7 +266,7 @@ export default class ReadComponent extends Component {
                     {post._id ? post.meta.views + '次浏览' : ''}
                   </span>
                   <span className="comments-link">
-                    <a href="#comments" rel="nofollow">{(post.meta.comments  ? post.meta.comments : 0) + '条评论'}</a>
+                    <Link href={post.uri + "#comments"} rel="nofollow">{(post.meta.comments  ? post.meta.comments : 0) + '条评论'}</Link>
                   </span>
                 </div>
               </header>
