@@ -1,23 +1,22 @@
 import React from 'react'
-import { Router, Route, IndexRoute, browserHistory, pushState } from 'react-router'
+import {Route, IndexRoute} from 'react-router'
 
 import { bindActionCreators } from 'redux'
-import {connect} from 'react-redux';
-import App from './containers/App'
+import { connect } from 'react-redux';
+import App from './containers/App/Index'
 
 
-
-var getComponent = function(component, ...paths) {
+var getComponent = function(name, ...paths) {
   return function(nextState, callback) {
     if (__SERVER__) {
-      let value = require("./containers/" + component);
+      let value = require("./containers/" + name + '/Index');
       if (paths.length) {
         value = requireAuthentication(value, ...paths);
       }
       callback(null, value)
     } else {
       require.ensure([], function(require) {
-        var bundle = require("bundle!./containers/" + component);
+        var bundle = require("bundle-loader!./containers/" + name + '/Index');
         bundle(function(value) {
           value = value.default || value;
           if (paths.length) {
@@ -34,79 +33,57 @@ function requireAuthentication(Component, isAdmin) {
   if (Component.AuthenticatedComponent) {
     return Component.AuthenticatedComponent
   }
-  class AuthenticatedComponent extends React.Component {
+
+  class Authenticated extends React.Component {
     static contextTypes = {
       router: React.PropTypes.object.isRequired,
     }
 
-    state = {
-      admin: true,
-    }
-
-    componentWillMount() {
-      this.checkAuth();
-    }
-
     componentWillReceiveProps(nextProps) {
-      this.checkAuth();
-    }
-
-    checkAuth() {
-      const token  = this.props.token;
-      const admin = token ? token.admin : null;
-
-      if (!admin) {
+      if (!this.props.token.get('admin')) {
         let redirect = this.props.location.pathname + this.props.location.search;
         this.context.router.push('/admin?message=401&redirect_uri=' + encodeURIComponent(redirect));
-        return;
       }
-      this.setState({admin});
     }
 
     render() {
-      if (this.state.admin) {
+      if (this.props.token.get('admin')) {
         return <Component {...this.props}/>
       }
-      return ''
+      return null
     }
   }
   function mapStateToProps(state) {
     return {
-      token: state.token,
+      token: state.get('token'),
     };
   }
 
   function mapDispatchToProps(dispatch) {
     return {};
   }
-  Component.AuthenticatedComponent = connect(mapStateToProps, mapDispatchToProps)(AuthenticatedComponent);
+  Component.AuthenticatedComponent = connect(mapStateToProps, mapDispatchToProps)(Authenticated);
   return Component.AuthenticatedComponent
 }
 
 
 
 
-
-
-
 export default (
-  <Router history={browserHistory}>
-    <Route path="/" component={App}>
-      <Route path="tags" getComponent={getComponent('tags/Container')}>
-        <IndexRoute getComponent={getComponent('tags/Index')} />
-        <Route path="create" getComponent={getComponent('tags/Create', true)}/>
-        <Route path=":tag/update" getComponent={getComponent('tags/Update', true)}/>
-      </Route>
-      <Route path="admin" getComponent={getComponent('Admin')} />
-
-      <IndexRoute getComponent={getComponent('posts/Index')} />
-      <Route path="tag-:tag" getComponent={getComponent('posts/Index')} />
-      <Route path="comments" getComponent={getComponent('Comment', true)} />
-      <Route path="create" getComponent={getComponent('posts/Create', true)}/>
-      <Route path=":slug/comments" getComponent={getComponent('posts/Comment')} />
-      <Route path=":slug/update" getComponent={getComponent('posts/Update', true)}/>
-      <Route path=":slug" getComponent={getComponent('posts/Read')}/>
-      <Route path="*" getComponent={getComponent('NotFound')} />
+  <Route path="/" component={App}>
+    <Route path="tags" component={({children}) => (children)}>
+      <IndexRoute getComponent={getComponent('Tags/Index')} />
+      <Route path="create" getComponent={getComponent('Tags/Editor', true)}/>
+      <Route path=":tag/update" getComponent={getComponent('Tags/Editor', true)}/>
     </Route>
-  </Router>
+    <Route path="admin" getComponent={getComponent('Admin')} />
+    <IndexRoute getComponent={getComponent('Posts/Index')} />
+    <Route path="tag-:tag" getComponent={getComponent('Posts/Index')} />
+    <Route path="create" getComponent={getComponent('Posts/Editor', true)} />
+    <Route path="comments" getComponent={getComponent('Comment', true)} />
+    <Route path=":slug" getComponent={getComponent('Posts/Read')} />
+    <Route path=":slug/comments" getComponent={getComponent('Posts/Comment')} />
+    <Route path=":slug/update" getComponent={getComponent('Posts/Editor', true)} />
+    <Route path="*" getComponent={getComponent('Errors/NotFound')} />
+  </Route>
 )

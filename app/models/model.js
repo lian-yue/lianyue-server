@@ -1,7 +1,5 @@
-"use strict";
-
+const utils = require('mongoose/lib/utils');
 const mongoose = require('mongoose');
-const utils = require('mongoose/lib/utils')
 const markdown = require('./markdown');
 
 mongoose.Promise = global.Promise;
@@ -22,7 +20,8 @@ Integer.prototype.cast = function(value) {
   return _value;
 }
 mongoose.Schema.Types.Integer = Integer;
-(function(Schema) {
+
+;(function(Schema) {
   if (Schema.prototype.preOriginal) {
     return;
   }

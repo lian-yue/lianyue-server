@@ -1,4 +1,3 @@
-"use strict";
 const path          = require('path')
 const http          = require('http')
 const assert        = require('assert')
@@ -80,6 +79,7 @@ app.context.onerror = function(err) {
   }
   var state = {}
 
+
   ctx.set(err.headers)
   if (err.state) {
     if (typeof err.state.toJSON == 'function') {
@@ -111,16 +111,16 @@ app.context.onerror = function(err) {
     status: err.status,
     messages: messages,
   };
-
   data = Object.assign(state, data);
+
   ctx.render('messages', data).then(() => {
     ctx.res.end(ctx.body);
-  }, (e) => {
+  }, (err) => {
     if (data.status == 500) {
-      throw e
+      throw err
     }
-    e.status = 500
-    this.onerror(e)
+    err.status = 500
+    this.onerror(err)
   });
 };
 
@@ -170,6 +170,9 @@ app.context.render = async function(relPath, state) {
       break;
     case 'rss':
       res = require('./views/rss/index')
+      break;
+    case 'vue':
+      res = require('./views/vue/index')
       break;
     default:
       res = require('./views/html/index')
@@ -272,19 +275,18 @@ app.context.render = async function(relPath, state) {
 // development  webpack
 if (process.env.NODE_ENV === "development") {
   process.env.DEBUG = '*';
-  let webpackDevMiddleware = require('koa-webpack-dev-middleware');
-  let webpack              = require('webpack');
-  let webpackConfig        = require('../webpack.config.js');
+  let koaWebpack = require('koa-webpack');
+  let config = require('../webpack.config');
 
-  app.use(koaConvert(webpackDevMiddleware(webpack(webpackConfig), {
-    contentBase: webpackConfig.output.path,
-    publicPath: webpackConfig.output.publicPath,
-    hot: true,
-    inline: true,
-    noInfo:true,
-    hideModules: true,
-    colors: true,
-  })));
+  app.use(koaWebpack({
+    config,
+    dev: {
+      noInfo: true,
+    },
+    hot: {
+      noInfo: true,
+    },
+  }));
 }
 
 

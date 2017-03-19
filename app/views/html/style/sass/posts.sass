@@ -7,6 +7,7 @@
       border-radius: .25rem
       padding: .2rem 0rem .2rem .75rem
       margin-right: 1rem
+      margin-bottom: .6rem
       span
         cursor: pointer
         display: inline-block
@@ -61,33 +62,18 @@
     border-top: 1px solid $border-color
     font-size: 1.1rem
     padding: 1.2rem 0
-    @include clearfix()
-    a,
-    a:hover,
-    a:active,
-    a:focus
-      text-decoration: none
-    .prev
-      float: left
-      &::before
-        color: inherit
-        display: inline-block
-        content: "«"
-        padding-right: .4rem
-    .next
-      float: right
-      &::after
-        color: inherit
-        display: inline-block
-        content: "»"
-        padding-left: .4rem
-  #comments
-    padding-top: 1rem
-    border-top: 1px solid $border-color
+.comments-inline
+  padding-top: 1rem
+  border-top: 1px solid $border-color
 #posts-index
+  @extend #posts-read
+  .pagination
+    border: 0
+    .next,
+    .prev,
+      display: none
   .title
     display: none
-  @extend #posts-read
   article
     margin-top: 1.6rem
     border-bottom: 1px solid $border-color

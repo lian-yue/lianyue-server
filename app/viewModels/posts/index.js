@@ -8,12 +8,12 @@ import Tag from '../../models/tag'
 export default async function(ctx) {
   var e;
 
-  var token
+  var token = await ctx.token()
 
   var query = {}
 
   // 删除
-  if (ctx.query.deleted && (token = await ctx.token()) && token.get('admin')) {
+  if (ctx.query.deleted && token && token.get('admin')) {
     query.deletedAt = {$exists: true}
   } else {
     query.deletedAt = {$exists: false}
@@ -23,7 +23,7 @@ export default async function(ctx) {
 
 
 
-  var tag
+  var tag = null
   if (ctx.params.tag) {
     tag = await Tag.findByTag(ctx.params.tag, {content: 0}).populate({
       path: 'parents',
@@ -37,7 +37,7 @@ export default async function(ctx) {
       throw e
     }
 
-    if (tag.get('state') == -1) {
+    if (tag.get('state') == -1  && (!token || !token.get('admin'))) {
       e = new Error('标签已被禁用')
       e.status = 403
       throw e

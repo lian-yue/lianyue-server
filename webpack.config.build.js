@@ -1,4 +1,3 @@
-"strict mode"
 const path        = require('path')
 const fs          = require('fs');
 const webpack     = require('webpack');
@@ -12,15 +11,19 @@ var nodeModules = fs.readdirSync('node_modules').filter(function (i) {
 
 
 exports = {
-  entry: ['./app/index.js'],
-  devtool: 'cheap-source-map',
+  entry: [
+    './app/index.js'
+  ],
+
   output: {
     path: path.join(__dirname, '/dist'),
     filename: 'index.js',
     publicPath: '/build/',
     libraryTarget: 'commonjs2'
   },
+
   target: 'node',
+
   node: {
     fs: 'empty',
     __dirname: true,
@@ -28,31 +31,59 @@ exports = {
   },
 
   resolve: {
-    root: path.join(__dirname, 'node_modules'),
-    alias: {
-    },
-    modulesDirectories: ['node_modules'],
-    extensions: ['', '.js', '.jsx', '.json'],
-  },
-
-  resolveLoader: {
-
+    modules: [
+      path.join(__dirname, 'node_modules'),
+    ],
+    extensions: ['.js', '.jsx', '.json', '.css', '.less', '.sass', '.scss', '.styl'],
   },
   module: {
-    loaders: [
-      {test: /\.(js|jsx)$/, loader: 'babel', exclude: /node_modules/},
-      {test: /\.json$/, loader: 'json'},
-      {test: /\.styl$/, loader: 'null'},
-      {test: /\.sass$/, loader: 'null'},
-      {test: /\.scss$/, loader: 'null'},
-      {test: /\.less$/, loader: 'null'},
-      {test: /\.css$/, loader: 'null'},
-      {test: /\.(gif|jpg|png)\??.*$/, loader: 'url'},
-      {test: /\.(woff|svg|eot|ttf|woff2|woff)\??.*$/, loader: 'null'},
+    rules: [
+      {
+        test: /\.(js|jsx)$/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: require('./config/babel')(true),
+          }
+        ],
+        exclude: [
+          path.resolve(__dirname, "node_modules"),
+        ],
+      },
+      {
+        test: /\.json$/,
+        use: 'json-loader',
+      },
+      {
+        test: /\.styl$/,
+        use: 'null-loader',
+      },
+      {
+        test: /\.sass$/,
+        use: 'null-loader',
+      },
+      {
+        test: /\.scss$/,
+        use: 'null-loader',
+      },
+      {
+        test: /\.less$/,
+        use: 'null-loader',
+      },
+      {
+        test: /\.css$/,
+        use: 'null-loader',
+      },
+      {
+        test: /\.(gif|jpg|png)\??.*$/,
+        use: 'url-loader',
+      },
+      {
+        test: /\.(woff|svg|eot|ttf|woff2|woff)\??.*$/,
+        use: 'null-loader',
+      },
     ]
   },
-
-  babel: require('./config/babel.js'),
 
   externals: [
     function (context, request, callback) {
@@ -75,7 +106,6 @@ exports = {
 
 
   plugins: [
-    new webpack.optimize.DedupePlugin(),
     // new webpack.optimize.UglifyJsPlugin({
     //   mangle: {
     //   },
@@ -91,33 +121,18 @@ exports = {
       '__ENV__': JSON.stringify(process.env.NODE_ENV),
       __SERVER__: true,
     }),
-    new webpack.optimize.OccurenceOrderPlugin(),
+    // new webpack.optimize.OccurenceOrderPlugin(),
   ],
 
+  devtool: 'cheap-source-map',
 };
 
 
 
 
-clientExports = require('./webpack.config.js');
-clientExports.plugins.push(
-  new webpack.optimize.DedupePlugin(),
-  new webpack.BannerPlugin("Name: "+packageInfo.name+"\nVersion: "+ packageInfo.version +"\nAuthor: "+ packageInfo.author +"\nDescription: "+ packageInfo.description +""),
-  new webpack.optimize.UglifyJsPlugin({
-  mangle: {
-  },
-  compress: {
-    warnings: false
-  },
-  comments: false,
-  mangle: true,
-  minimize: true,
-}));
-
-
 
 module.exports = [
-  clientExports,
+  require('./webpack.config.js'),
   exports,
 ];
 

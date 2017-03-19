@@ -1,11 +1,9 @@
-import koaBodyParser from 'koa-bodyparser'
+import koaBody from 'koa-body'
 
-const bodyParse = koaBodyParser({
+const bodyParse = koaBody({
   formLimit: '1mb',
   jsonLimit: '1mb',
-  onerror(err, ctx) {
-    ctx.throw(err.message || 'body parse error', err.statusCode || err.status || 422);
-  },
+  textLimit: '1mb',
 });
 
 export default async (ctx, next) => {

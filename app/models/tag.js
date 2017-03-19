@@ -19,8 +19,8 @@ var schema = new Schema({
     unique: true,
     trim: true,
     required: [true, '标签名称不能为空'],
-    minlength: [2, '签名称长度不能少于 2 位或大于 32 字节 ({PATH})'],
-    maxlength: [32, '签名称长度不能少于 2 位或大于 32 字节 ({PATH})'],
+    minlength: [2, '标签名称长度不能少于 2 位或大于 32 字节 ({PATH})'],
+    maxlength: [32, '标签名称长度不能少于 2 位或大于 32 字节 ({PATH})'],
     set(name) {
       return String(name).replace(/\s+/g, ' ').trim()
     },

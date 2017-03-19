@@ -1,80 +1,110 @@
-import React, { createElement } from 'react'
 import moment from 'moment'
-import { render } from 'react-dom'
-import { match, Router, browserHistory as history } from 'react-router'
 
-moment.locale('zh-cn');
+import React, { createElement } from 'react'
+import { render as renderToElement, unmountComponentAtNode } from 'react-dom'
+import { match, Router, browserHistory } from 'react-router'
+import { Provider } from 'react-redux'
+import { syncHistoryWithStore } from 'react-router-redux';
+
 
 import config from '../../../config'
 
 import routes from './routes'
-import { Provider } from 'react-redux'
 import configureStore from './store/configureStore'
 
-const store = configureStore(window.__REDUX_STATE__)
-const componentsState = window.__COMPONENTS_STATE__
-
-if (!window.fetch) {
-  require.ensure([], (require) => {
-    require("whatwg-fetch")
-  }, 'fetch')
-}
-if (!window.Promise) {
-  require.ensure([], (require) => {
-    require('es6-promise').polyfill();
-    matchCallback()
-  }, 'es6-promise')
-} else {
-  matchCallback();
-}
+moment.locale('zh-cn');
 
 
-function matchCallback() {
-  match({ routes, history }, function(error, redirectLocation, renderProps) {
-    var prefetchTasks = [];
-    for (let i = 0; i < renderProps.routes.length; i++) {
-      let route = renderProps.routes[i];
-      if (route.getComponent) {
-        (function(route) {
-          prefetchTasks.push(new Promise(function(resolve, reject)  {
-            route.getComponent(renderProps.location, function(error, component) {
-              if (error) {
-                reject(error);
-              } else {
-                resolve();
-              }
-            })
-          }));
-        })(route)
+async function render() {
+
+  const store = configureStore(window.__REDUX_STATE__)
+
+  const history = syncHistoryWithStore(browserHistory, store, {
+    selectLocationState(state) {
+      var routing = state.get('routing')
+      return routing ? routing.toJS() : routing
+    },
+  })
+
+  const app = document.getElementById('app')
+
+
+  const {redirect, props} = await new Promise((resolve, reject) => {
+    match({
+      routes,
+      history,
+    }, (err, redirect, props) => {
+      if (err) {
+        return reject(err)
       }
-    }
-    Promise.all(prefetchTasks).then(function() {
-      for (let component of renderProps.components) {
-        if (component) {
-          component.componentState = componentsState.shift();
-        }
-      }
+      resolve({redirect, props})
+    })
+  });
 
-      renderProps.createElement = function(component, props) {
-        if (component == null) {
-          return null;
-        }
-        if (component.componentState) {
-          props.componentState = component.componentState;
-          component.componentState = false
-        }
-        component = createElement(component, props);
-        return component;
-      }
-
-      render(
+  if (process.env.NODE_ENV == 'development') {
+    const AppContainer = require('react-hot-loader').AppContainer;
+    renderToElement(
+      <AppContainer>
         <Provider store={store}>
-          <Router history={history} {...renderProps}>
+          <Router {...props} history={history}>
             {routes}
           </Router>
-        </Provider>,
-        document.querySelector('#app')
-      )
-    })
-  })
+        </Provider>
+      </AppContainer>,
+      app
+    )
+
+
+    if (module.hot) {
+      module.hot.accept('./routes', () => {
+        const routes = require('./routes');
+        unmountComponentAtNode(app)
+        renderToElement(
+          <AppContainer>
+            <Provider store={store}>
+              <Router history={history}>
+                {routes}
+              </Router>
+            </Provider>
+          </AppContainer>,
+          app
+        );
+      });
+    }
+  } else {
+    renderToElement(
+      <Provider store={store}>
+        <Router history={history}>
+          {routes}
+        </Router>
+      </Provider>,
+      app
+    )
+  }
 }
+
+
+
+
+module.exports = async function() {
+  if (!window.fetch) {
+    await new Promise(function(resolve, reject) {
+      require.ensure([], (require) => {
+        require("whatwg-fetch")
+        resolve(true)
+      }, 'fetch')
+    });
+  }
+
+  if (!window.Promise) {
+    await new Promise(function(resolve, reject) {
+      require.ensure([], (require) => {
+        require('es6-promise').polyfill();
+        resolve(true)
+      }, 'es6-promise')
+    });
+  }
+  await render()
+}
+
+module.exports()

@@ -29,7 +29,7 @@ export function fetchToken(create, ctx) {
     }
   } else {
     return dispatch => {
-      return fetch('/token' + (create ? '?create=' + create : ''), {
+      return fetch('/token?view=json' + (create ? '&create=' + create : ''), {
         credentials: 'same-origin'
       })
         .then(response => response.json())

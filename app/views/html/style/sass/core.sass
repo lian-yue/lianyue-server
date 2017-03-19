@@ -27,7 +27,77 @@ label
 
 
 
-.load
+
+
+
+
+
+
+
+.pagination
+  text-align: center
+  font-size: 1.1rem
+  padding: 1.2rem 0
+  @include clearfix()
+  a,
+  a:hover,
+  a:active,
+  a:focus
+    text-decoration: none
+  .prev
+    float: left
+    &::before
+      color: inherit
+      display: inline-block
+      content: "«"
+      padding-right: .4rem
+  .next
+    float: right
+    &::after
+      color: inherit
+      display: inline-block
+      content: "»"
+      padding-left: .4rem
+  .more,
+  .manual,
+  .loaded
+    border-radius: 2rem
+    border: 1px solid $border-color
+    display: inline-block
+    padding: .6rem 1.4rem
+
+
+
+
+
+.loading
+  text-align: center
+  &.middle
+    margin-top: 25%
+  &.sm
+    font-size: .8rem
+    .circle
+      border-width: 2px
+  &.lg
+    font-size: 1.4rem
+    .circle
+      border-width: 4px
+  &.xl
+    font-size: 1.8rem
+    .circle
+      border-width: 5px
+  .circle
+    height: 2.5em
+    width: 2.5em
+    display: inline-block
+    border: 3px solid $border-color
+    border-right-color: $brand-primary
+    border-radius: 50%
+    animation: loading .6s linear
+    animation-iteration-count: infinite
+    z-index: 2
+
+// .load
   position: relative
   text-align: center
   .loading
@@ -98,45 +168,26 @@ label
       padding: .3rem 1rem
 
 
-
-
 #app,
 #wrapper
   min-height: 100%
   position: relative
   overflow: hidden
 
-#wrapper
-  max-width: 1600px
-  margin: 0 auto
+// @media (min-width: 2200px)
+//   #wrapper
+    max-width: 1600px
 
 .none
   display: none
 
 
-.navigation
-  font-size: 1.1rem
-  padding: 1.2rem
-  text-align: center
-  .next,
-  .prev,
-    display: none
-  .more
-    border-radius: 2.4rem
-    border: 1px solid $border-color
-    display: inline-block
-    padding: .6rem 1.6rem
-    &:hover,
-    &:focus,
-    &:active
-      text-decoration: none
 
 #header
   z-index: $zindex-header
   width: $header-width-lg
   background: $header-bg url(../images/header.jpg) no-repeat center center
   background-size: cover
-  position: absolute
   position: fixed
   top: 0
   bottom: 0
@@ -274,7 +325,9 @@ label
 
 #main
   margin-left: $header-width-lg
+
   position: relative
+  overflow: hidden
   min-height: 50vh
   padding: 0 4rem 0 2rem
 
@@ -318,6 +371,10 @@ label
       text-decoration: none
 
 #footer
+  // position: absolute
+  // bottom: 0
+  // right: 0
+  // left: 0
   margin-left: $header-width-lg
   padding: 0 4rem 0 2rem
   text-align: center
@@ -327,13 +384,20 @@ label
   span
     display: block
     margin: .5rem
-
 #breadcrumb-bar
+  z-index: $zindex-navbar
   margin-left: $header-width-lg
   padding: 0 4rem 0 2rem
+  position: fixed
+  left: 0
+  right: 0
+  top: 0
+  background: $body-bg
   border-bottom: 1px solid $border-color
   margin-bottom: 1rem
   @include clearfix()
+html
+  margin-top: 5rem
 #header-toggle
   display: none
 
@@ -429,14 +493,16 @@ label
     height: 100%
     overflow: hidden!important
     position: relative
+    left: 0
+    right: 0
+    bottom: 0
     #header
       transform: none
     #footer,
     #main,
+    #breadcrumb-bar,
     #popup-messages
       transform: translateX($header-width-md)
-    #breadcrumb-bar
-      margin-left: $header-width-md
     #header-backdrop
       visibility: visible
       opacity: .3
@@ -478,17 +544,13 @@ label
   #footer
     margin: 0
     padding: 0 1rem
-  html
-    margin-top: 3.6rem
   #breadcrumb-bar
     margin: 0
-    position: fixed
-    left: 0
-    top: 0
     z-index: $zindex-navbar
-    width: 100%
     background: $header-bg
     padding: 0
+  html
+    margin-top: 3.6rem
   #popup-messages
     transform: none
   #header-toggle
@@ -532,6 +594,7 @@ label
     padding: 0
     margin: 0
     label
+      float: right
       position: absolute
       padding-top: 0
       z-index: 1

@@ -1,6 +1,5 @@
 import path from 'path'
 
-// development
 if (process.env.NODE_ENV == "development") {
   // 自动重载  路由
   const watcher = require("chokidar").watch([

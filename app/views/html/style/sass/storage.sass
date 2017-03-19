@@ -1,24 +1,26 @@
 .storage
   .modal-backdrop
     opacity: 0
-    &.fade
-      transition: all 0.3s ease
-      visibility: hidden
-      opacity: .3
-    &.show
-      visibility: visible
-.storage-modal
-  &.fade
+    transition: all 0.3s ease
+    visibility: hidden
+  .storage-modal
     display: none
-    .modal-dialog
-      transform: none
+  .modal-dialog
+    transform: none
+    
   &.show
-    display: block
+    .storage-modal
+      display: block
     .modal-dialog
       transform: none
       animation: storage-in 0.3s
-  .fade
-    transition: all 0.3s
+    .modal-backdrop
+      opacity: .3
+      visibility: visible
+
+
+.storage-modal
+  transition: all 0.3s
   .modal-dialog
     overflow: hidden
     position: absolute

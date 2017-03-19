@@ -1,4 +1,5 @@
 export const MESSAGES_SET = 'MESSAGES_SET'
+
 export const MESSAGES_CLOSE = 'MESSAGES_CLOSE'
 
 
