@@ -243,6 +243,7 @@ export default class Comment extends Component {
         return result
       }
       return <Main
+        statistics={false}
         title={[title, site.title]}
         breadcrumb={[title]} >
         {result}

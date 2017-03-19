@@ -146,6 +146,7 @@ export default class Read extends Component {
       return <Main
         title={["文章内容", site.title]}
         breadcrumb={['文章内容']}
+        statistics={false}
         >
         <section id="content">{this.state.loading ? <Loading size="xl" middle={true} /> : ''}</section>
       </Main>
