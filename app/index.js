@@ -3,8 +3,9 @@ import http        from 'http'
 import assert      from 'assert'
 import Koa         from 'koa'
 import koaStatic   from 'koa-static'
-import packageInfo from 'package'
+import moment      from 'moment'
 
+import packageInfo from 'package'
 global.__SERVER__ = true
 
 
@@ -282,7 +283,7 @@ export default function() {
     await next()
     var ms = new Date - start;
     var userAgent = ctx.request.header['user-agent'] || '';
-    console.log(`${ctx.method} ${ctx.status} ${ctx.url} - ${ms}ms - ${ctx.request.ip} - ${userAgent}`);
+    console.log(`${ctx.method} ${ctx.status} ${ctx.url} - ${moment(start).format('YYYY-MM-DD hh:mm:ss')} - ${ms}ms - ${ctx.request.ip} - ${userAgent}`);
     ctx.set('X-Response-Time', ms + 'ms');
     ctx.set('X-Version', packageInfo.version);
     ctx.set('X-Author', packageInfo.author);
@@ -341,10 +342,11 @@ export default function() {
 
   // 错误捕获
   app.on('error', function(err, ctx) {
+    var date = moment().format('YYYY-MM-DD hh:mm:ss')
     if (err.status >= 500) {
-      console.error('server error :', err, ctx);
+      console.error(date, 'server error :', err, ctx);
     } else {
-      console.warn(`${ctx.method} ${ctx.status} ${ctx.url} - ${ctx.request.ip} - ${err.message}`);
+      console.warn(`${ctx.method} ${ctx.status} ${ctx.url} - ${date} - ${ctx.request.ip} - ${err.message}`);
     }
   });
 
