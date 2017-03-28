@@ -4,20 +4,21 @@ import thunk from 'redux-thunk'
 import promise from 'redux-promise'
 
 
-import rootReducer from '../reducers'
-export default function configureStore(preloadedState) {
+import reducers from '../reducers'
+export default function(state, middleware = []) {
+  middleware.push(thunk, promise)
   const store = createStore(
-    rootReducer,
-    fromJS(preloadedState),
-    applyMiddleware(thunk, promise)
+    reducers,
+    fromJS(state),
+    applyMiddleware(...middleware)
   )
 
 
   if (module.hot) {
     // Enable Webpack hot module replacement for reducers
     module.hot.accept('../reducers', () => {
-      const nextRootReducer = require('../reducers')
-      store.replaceReducer(nextRootReducer)
+      const reducers = require('../reducers')
+      store.replaceReducer(reducers)
     })
   }
 

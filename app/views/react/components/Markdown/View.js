@@ -124,7 +124,7 @@ export default class View extends PureComponent {
             return
           }
 
-          _this.context.router.push(this.pathname + this.search + this.hash)
+          _this.context.router.history.push(this.pathname + this.search + this.hash)
         }
       }
     }

@@ -1,12 +1,12 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 
+import site from 'config/site'
+
 
 import actions from '../../../actions'
 
 import Main from '../../../components/Main'
-
-const {site} = __CONFIG__
 
 const title = "错误消息"
 

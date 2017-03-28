@@ -1,6 +1,5 @@
 import path from 'path'
 import fs from 'fs'
-import consolidate from 'consolidate'
 
 const relPaths = ['posts/index']
 
@@ -15,7 +14,7 @@ export default async function(ctx, relPath, state) {
     return
   }
   state.ctx = ctx;
-  state.cache = ctx.app.env != 'development'
   ctx.type = 'xml'
-  ctx.body = await consolidate.ejs(path.join(__dirname, './', relPath + '.ejs'), state)
+  const template = require('./' + relPath + '.ejs');
+  ctx.body = template(state)
 }

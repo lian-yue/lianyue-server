@@ -1,62 +1,56 @@
 import moment from 'moment'
 
-import React, { createElement, Children, Element } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { match, RouterContext, createMemoryHistory } from 'react-router'
+import React, { Children } from 'react'
+import { renderToStaticMarkup, renderToString } from 'react-dom/server'
+import createHistory from 'history/createMemoryHistory'
+import { routerMiddleware, ConnectedRouter as Router } from 'react-router-redux'
+
+import {  Route } from 'react-router-dom'
 import { Provider } from 'react-redux'
-import { syncHistoryWithStore } from 'react-router-redux'
 
 
-
-import configureStore from './store/configureStore'
-import routes from './routes'
+import Store from './store'
 import actions from './actions'
 
+import App from './views/App'
+
 import Theme from './Theme'
+
+
 
 moment.locale('zh-cn');
 
 export default async function (inlineState, ctx) {
-  var start = new Date;
+  const start = new Date;
+
   const location = ctx.url
 
-  const store = configureStore()
+  const context = {}
 
-  const history = syncHistoryWithStore(createMemoryHistory(location), store, {
-    selectLocationState(state) {
-      var routing = state.get('routing')
-      return routing ? routing.toJS() : routing
-    },
-  });
+  const history = createHistory({
+    initialEntries:[location],
+  })
 
+  const middleware = routerMiddleware(history)
 
+  const store = Store({}, [middleware])
 
-  const {redirect, renderProps} = await new Promise((resolve, reject) => {
-    match({
-      routes,
-      history,
-      location,
-    }, (err, redirect, renderProps) => {
-      if (err) {
-        return reject(err)
-      }
-      resolve({redirect, renderProps})
-    })
-  });
-
-  if (redirect) {
-    return {redirect}
-  }
-  if (!renderProps) {
-    throw new Error('React router match is empty')
-  }
   var app = <Provider store={store}>
-    <RouterContext {...renderProps} />
+    <Router history={history} context={context}>
+      <App />
+    </Router>
   </Provider>
+
 
   var startTree = new Date;
   await reactTreeWalker(app, {}, ctx, inlineState);
   var msTree = new Date - startTree;
+
+  var app = renderToString(app);
+
+  if (context.url) {
+    return {redirect: context.url}
+  }
 
   var html = renderToStaticMarkup(<Theme store={store}>{app}</Theme>)
   var body = '<!DOCTYPE html>' + html
@@ -64,6 +58,7 @@ export default async function (inlineState, ctx) {
   var ms = new Date - start;
 
   ctx.set('X-Render-Time', [ms, msTree].join(',') + 'ms');
+
   return {body}
 }
 
@@ -100,6 +95,17 @@ async function reactTreeWalker(element, context = {}, ctx, inlineState) {
         }
       }
 
+      if (instance.asyncComponent) {
+        let promise = instance.asyncComponent()
+        if (promise && promise.then) {
+          await promise
+        }
+      }
+
+      if (instance.componentWillMount) {
+        // Make the setState synchronous.
+        instance.componentWillMount();
+      }
 
       // Ensure the child context is initialised if it is available. We will
       // need to pass it down the tree.
@@ -111,8 +117,6 @@ async function reactTreeWalker(element, context = {}, ctx, inlineState) {
       child = instance.render();
     } else {
       // Stateless Functional Component
-
-
       // Get the output for the function, as the child.
       child = Component(props, context);
     }

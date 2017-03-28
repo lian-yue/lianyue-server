@@ -1,13 +1,13 @@
 import React, { Component, PropTypes } from 'react'
-import { Link, IndexLink } from 'react-router'
+import { Link } from 'react-router-dom'
 
 import { connect } from 'react-redux'
-import { fromJS } from 'immutable';
+import { fromJS } from 'immutable'
 
 
 import actions from '../actions'
 
-@connect(state => ({routing: state.get('routing')}))
+@connect(state => ({router: state.get('router')}))
 export default class Main extends Component {
   static propTypes = {
     html: PropTypes.object,
@@ -35,13 +35,19 @@ export default class Main extends Component {
     const {title, meta, link, html, breadcrumb} = this.props;
     var headers = {title, meta, link, html}
     if (!this.headers || !this.headers.equals(fromJS(headers))) {
+      this.props.dispatch(actions.setHeaders(headers));
+      this.headers = fromJS(headers)
+
       if (!__SERVER__) {
-        setTimeout(() => {
+        if (this.timer) {
+          clearTimeout(this.timer)
+          this.timer = null
+        }
+        this.timer = setTimeout(() => {
+          this.timer = null
           this.statistics()
         }, 100)
       }
-      this.props.dispatch(actions.setHeaders(headers));
-      this.headers = fromJS(headers)
     }
   }
 
@@ -56,7 +62,7 @@ export default class Main extends Component {
 
   onSearch = (e) => {
     e.preventDefault();
-    this.context.router.push('/?search=' + encodeURIComponent(this.refs.search.value || ''));
+    this.props.dispatch(actions.router.push('/?search=' + encodeURIComponent(this.refs.search.value || '')))
     this.refs.search.blur()
   }
 
@@ -66,9 +72,12 @@ export default class Main extends Component {
     if (!this.props.statistics) {
       return
     }
+    if (process.env.NODE_ENV == 'development') {
+      return
+    }
 
-    var routing = this.props.routing.get('locationBeforeTransitions')
-    var path = routing.get('pathname') + routing.get('search')
+    var location = this.props.router.get('location')
+    var path = location.get('pathname') + location.get('search')
     if (path == this.statisticsPath) {
       return
     }
@@ -113,16 +122,6 @@ export default class Main extends Component {
   }
 
 
-  //
-  // <script>
-  // (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  // (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  // m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  // })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-  //
-  // ga('create', 'UA-18091019-2', 'auto');
-  // ga('send', 'pageview');
-  // </script>
 
 
   onHeaderToggle(e) {

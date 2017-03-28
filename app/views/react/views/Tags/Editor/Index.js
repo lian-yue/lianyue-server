@@ -1,10 +1,9 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
 import { Field, reduxForm } from 'redux-form/immutable'
-
 import { fromJS } from 'immutable';
 
+import site from 'config/site'
 
 import actions from '../../../actions'
 
@@ -17,9 +16,6 @@ import FieldContent from '../../../components/Markdown/Editor'
 import FieldParents from './Parents'
 
 
-const { site } = __CONFIG__
-
-
 @connect(state => ({
 }))
 @reduxForm({
@@ -27,7 +23,6 @@ const { site } = __CONFIG__
 })
 export default class Editor extends Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired,
     fetch: PropTypes.func.isRequired,
   }
 
@@ -37,7 +32,7 @@ export default class Editor extends Component {
 
 
   onSubmit = async (state) => {
-    var tag = this.props.params.tag
+    var tag = this.props.match.params.tag
     var parents = state.get('parents') || fromJS([])
     var body = {
       names: state.get('names'),
@@ -52,7 +47,7 @@ export default class Editor extends Component {
         this.props.dispatch(actions.setMessages(result))
         return
       }
-      this.context.router.push(result.postUri + '?message=' + (tag ? 'update' : 'create') + '&r='+ Date.now())
+      this.props.dispatch(actions.router.push(result.postUri + '?message=' + (tag ? 'update' : 'create') + '&r='+ Date.now()))
     } catch (e) {
       this.props.dispatch(actions.setMessages(e))
     }
@@ -65,7 +60,7 @@ export default class Editor extends Component {
 
 
   async fetch(props) {
-    var tag = props.params.tag
+    var tag = props.match.params.tag
     if (!tag) {
       return
     }
@@ -89,7 +84,7 @@ export default class Editor extends Component {
   render () {
     const {handleSubmit, pristine, submitting} = this.props
     var title = '创建标签'
-    if (this.props.params.slug) {
+    if (this.props.match.params.slug) {
       title = '编辑标签'
     }
 

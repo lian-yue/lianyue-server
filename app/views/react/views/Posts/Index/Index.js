@@ -1,8 +1,12 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import moment from 'moment'
 import queryString from 'query-string'
+
+import site from 'config/site'
+
+
 import actions from '../../../actions'
 
 import Loading from '../../../components/Loading'
@@ -11,7 +15,6 @@ import Main from '../../../components/Main'
 
 import View from '../../../components/Markdown/View'
 
-const { site } = __CONFIG__
 
 
 
@@ -23,19 +26,22 @@ if (__SERVER__) {
     state.path = this.context.getPath()
     state.tag = state.tag || null
     this.props.dispatch(actions.addPostList(state))
+    if (ctx.request.path == '/' && !ctx.request.search && !this.props.links) {
+      await this.props.dispatch(actions.fetchLinks());
+    }
   }
 }
 
 
 @connect(state => ({
   postList: state.get('postList'),
-  routing: state.get('routing'),
+  router: state.get('router'),
+  links: state.get('links'),
   token: state.get('token'),
 }))
 
 export default class Index extends Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired,
     fetch: PropTypes.func.isRequired,
     toUrl: PropTypes.func.isRequired,
     getPath: PropTypes.func.isRequired,
@@ -54,7 +60,7 @@ export default class Index extends Component {
     }
     this.setState({loading: true})
     try {
-      var result = await this.context.fetch(props.location.pathname, props.location.query)
+      var result = await this.context.fetch(props.location.pathname, props.location.search)
       if (result.messages) {
         props.dispatch(actions.setMessages(result, 'danger', 'popup'))
         return
@@ -73,7 +79,7 @@ export default class Index extends Component {
   onMore = (e) => {
     e.preventDefault();
     this.isMore = true
-    this.context.router.push(e.target.pathname + e.target.search)
+    this.props.dispatch(actions.router.push(e.target.pathname + e.target.search))
   }
 
 
@@ -82,6 +88,9 @@ export default class Index extends Component {
       if (this.props.postList.get('path') != this.context.getPath(this.props)) {
         this.props.dispatch(actions.clearPostList())
         this.fetch(this.props)
+      }
+      if (this.props.location.pathname == '/' && !this.props.location.search && this.props.links === false) {
+        this.props.dispatch(actions.fetchLinks());
       }
     }
   }
@@ -112,7 +121,7 @@ export default class Index extends Component {
   shouldComponentUpdate(nextProps, nextState) {
     var props = this.props
     var state = this.state
-    if (props.postList.equals(nextProps.postList) && props.routing.equals(nextProps.routing) && state.loading == nextState.loading) {
+    if (props.postList.equals(nextProps.postList) && props.router.equals(nextProps.router) && state.loading == nextState.loading && props.links == nextProps.links) {
       return false
     }
     return true
@@ -149,6 +158,7 @@ export default class Index extends Component {
     }
     var query = {}
 
+
     var next
     var prev
 
@@ -157,13 +167,16 @@ export default class Index extends Component {
     var postList = this.props.postList
 
     var location = this.props.location
+
+    var locationQuery = queryString.parse(location.search)
+
     var tag = postList.get('tag')
 
-    var page = parseInt(location.query.page || 1)
+    var page = parseInt(locationQuery.page || 1)
     if (isNaN(page)) {
       page = 1
     }
-    var search = (location.query.search || '').trim()
+    var search = (locationQuery.search || '').trim()
 
     if (search) {
       query.search = search
@@ -174,7 +187,7 @@ export default class Index extends Component {
       headers.meta.push({name: 'keywords', content: tag.get('names').join(',')})
       headers.meta.push({name: 'description', content: tag.get('description')})
       headers.meta.push({property: 'og:description', content: tag.get('description')})
-    } else if (location.query.isPage) {
+    } else if (locationQuery.isPage) {
       query.isPage = '1'
       headers.title.push('页面列表')
     } else {
@@ -235,6 +248,8 @@ export default class Index extends Component {
       h1 = <h1 className="title">标签<Link to={'/tag-' + tag.get('postUri')} title={tag.get('names').get(0)} rel="tag">{tag.get('names').get(0)}</Link>下的文章</h1>
     } else if (query.isPage) {
       h1 = <h1 className="title">页面列表</h1>
+    } else {
+      h1 = <h1 className="title">{site.title}</h1>
     }
 
 
@@ -243,7 +258,7 @@ export default class Index extends Component {
       adminMenu = (
       <section id="admin-menu">
         <ul id="admin-menu-fixed" className="nav flex-column">
-          <li className="nav-item">{location.query.deleted ? <Link to="/" className="nav-link">已发布</Link> : <Link to="/?deleted=1" className="nav-link">回收站</Link>}</li>
+          <li className="nav-item">{locationQuery.deleted ? <Link to="/" className="nav-link">已发布</Link> : <Link to="/?deleted=1" className="nav-link">回收站</Link>}</li>
           <li className="nav-item">{query.isPage ? <Link to='/' className="nav-link">文章列表</Link> :  <Link to="/?isPage=1" className="nav-link">页面列表</Link>}</li>
           <li className="nav-item"><Link to="/create" className="nav-link">创建文章</Link></li>
           {tag && tag.get('state') != -1 ? <li className="nav-item"><Link to={tag.get('uri') + '/update'} className="nav-link">编辑标签</Link></li> : ''}
@@ -253,6 +268,7 @@ export default class Index extends Component {
       </section>
       )
     }
+
 
     return <Main {...headers}>
       <section id="content">
@@ -274,7 +290,7 @@ export default class Index extends Component {
                   <div className="entry-meta">
                     <time className="entry-date" itemProp="datePublished" dateTime={createdAt} title={createdAt}>{createdAt ? moment(post.get('createdAt')).fromNow() : ''}</time>
                     <span className="comments-link">
-                      <Link href={post.get('uri') + "#comments"} rel="nofollow">{(post.get('meta').get('comments') || 0) + '条评论'}</Link>
+                      <Link to={post.get('uri') + "#comments"} rel="nofollow">{(post.get('meta').get('comments') || 0) + '条评论'}</Link>
                     </span>
                   </div>
                 </header>
@@ -292,6 +308,7 @@ export default class Index extends Component {
           {adminMenu}
         </div>
       </section>
+      {location.pathname == '/' && !location.search && this.props.links ? <section id="links" dangerouslySetInnerHTML={{__html: '<h2 class="title">友情链接</h2>' + this.props.links}}></section> : ''}
     </Main>
   }
 }

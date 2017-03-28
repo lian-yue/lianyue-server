@@ -1,8 +1,10 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import queryString from 'query-string'
 import moment from 'moment'
+
+import site from 'config/site'
 
 import actions from '../../actions'
 
@@ -14,18 +16,29 @@ import Main from '../../components/Main'
 
 import View from '../../components/Markdown/View'
 
-const { site } = __CONFIG__
 
 const title = '评论管理'
 
 
+
+
+
+
+var componentServerMount
+if (__SERVER__) {
+  componentServerMount = async function componentServerMount(ctx, state) {
+    state.path = this.context.getPath()
+    this.props.dispatch(actions.addCommentList(state))
+  }
+}
+
+
 @connect(state => ({
   commentList: state.get('commentList'),
-  routing: state.get('routing'),
+  router: state.get('router'),
 }))
 export default class Comment extends Component {
   static contextTypes = {
-    router: React.PropTypes.object.isRequired,
     fetch: React.PropTypes.func.isRequired,
     getPath: PropTypes.func.isRequired,
     onChange: React.PropTypes.func.isRequired,
@@ -38,6 +51,7 @@ export default class Comment extends Component {
   }
 
 
+  componentServerMount = componentServerMount
   componentDidMount() {
     var props = this.props
     var commentList = this.props.commentList
@@ -123,7 +137,7 @@ export default class Comment extends Component {
   onMore = (e) => {
     e.preventDefault();
     this.isMore = true
-    this.context.router.push(e.target.pathname + e.target.search)
+    this.props.dispatch(actions.router.push(e.target.pathname + e.target.search))
   }
 
 
@@ -143,7 +157,7 @@ export default class Comment extends Component {
     }
     this.setState({loading: true})
     try {
-      var result = await this.context.fetch('/comments', props.location.query)
+      var result = await this.context.fetch(props.location.pathname, props.location.search)
       if (result.messages) {
         props.dispatch(actions.setMessages(result, 'danger', 'popup'))
         return
@@ -203,6 +217,7 @@ export default class Comment extends Component {
   render () {
     var commentList = this.props.commentList
 
+    var locationQuery = queryString.parse(this.props.location.search);
 
     var headers = {
       title: [title, site.title],
@@ -212,10 +227,11 @@ export default class Comment extends Component {
       ],
     }
 
+
     var navigation = ''
     if (commentList.get('more')) {
       let id = commentList.get('results').size ? commentList.get('results').get(-1).get('_id') : undefined
-      let to = '/comments?' + queryString.stringify(Object.assign({}, this.props.location.query, {id}))
+      let to = '/comments?' + queryString.stringify(Object.assign({}, locationQuery, {id}))
       navigation = <nav className="navigation pagination" role="navigation">
         {!this.state.loading && commentList.get('more') ? <Link to={to} className="more" onClick={this.onMore} rel="next">加载更多</Link> : ''}
         {this.state.loading ? <Loading></Loading> : ''}
@@ -286,7 +302,7 @@ export default class Comment extends Component {
 
     var menu = <section id="admin-menu">
       <ul id="admin-menu-fixed" className="nav flex-column">
-        <li className="nav-item">{this.props.location.query.deleted ? <Link to={this.props.location.pathname} className="nav-link">已发布</Link> : <Link to={this.props.location.pathname + "?deleted=1"} className="nav-link">回收站</Link>}</li>
+        <li className="nav-item">{locationQuery.deleted ? <Link to={this.props.location.pathname} className="nav-link">已发布</Link> : <Link to={this.props.location.pathname + "?deleted=1"} className="nav-link">回收站</Link>}</li>
       </ul>
     </section>
 

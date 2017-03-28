@@ -1,7 +1,7 @@
 import fs from 'fs'
 
 
-import Storage from '../../models/storage'
+import Storage from 'models/storage'
 
 
 

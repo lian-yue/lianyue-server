@@ -1,4 +1,4 @@
-import Storage from '../../models/storage'
+import Storage from 'models/storage'
 const ObjectId = require('mongoose').Types.ObjectId;
 
 

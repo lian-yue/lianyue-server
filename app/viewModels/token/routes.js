@@ -1,8 +1,9 @@
 import koaRouter from 'koa-router'
 
-const router = koaRouter();
+export default function router() {
+  const router = koaRouter();
 
-router.get('/', require('./read'));
+  router.get('/', require('./read'));
 
-
-export default router;
+  return router
+}

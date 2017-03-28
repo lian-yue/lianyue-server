@@ -1,8 +1,9 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import queryString from 'query-string'
 import moment from 'moment'
+import site from 'config/site'
 
 
 import actions from '../../../actions'
@@ -16,7 +17,6 @@ import Loading from '../../../components/Loading'
 
 import Main from '../../../components/Main'
 
-const { site } = __CONFIG__
 
 const title = '评论'
 
@@ -24,9 +24,6 @@ const title = '评论'
 var componentServerMount
 if (__SERVER__) {
   componentServerMount = async function componentServerMount(ctx, state) {
-    if (!state || !ctx) {
-      return
-    }
     if (this.props.inline) {
       if (state._id) {
         const Comment = require('../../../../../models/comment');
@@ -47,12 +44,11 @@ if (__SERVER__) {
 
 @connect(state => ({
   commentList: state.get('commentList'),
-  routing: state.get('routing'),
+  router: state.get('router'),
   token: state.get('token'),
 }))
 export default class Comment extends Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired,
     fetch: PropTypes.func.isRequired,
     getPath: PropTypes.func.isRequired,
     toUrl: PropTypes.func.isRequired,
@@ -75,7 +71,7 @@ export default class Comment extends Component {
     }
     this.setState({loading: true})
     try {
-      var result = await this.context.fetch('/' + props.params.slug + '/comments', props.inline ? {} : props.location.query)
+      var result = await this.context.fetch('/' + props.match.params.slug + '/comments', props.inline ? {} : props.location.search)
       if (result.messages) {
         props.dispatch(actions.setMessages(result, 'danger', 'popup'))
         return
@@ -93,7 +89,7 @@ export default class Comment extends Component {
   onMore = (e) => {
     e.preventDefault();
     this.isMore = true
-    this.context.router.push(e.target.pathname + e.target.search)
+    this.props.history.push(e.target.pathname + e.target.search)
   }
 
 
@@ -104,13 +100,14 @@ export default class Comment extends Component {
       if (commentList.get('path') != this.context.getPath(props)) {
         props.dispatch(actions.clearCommentList())
         this.fetch(props)
-      } else if (this.props.commentList.get('messages')) {
-        this.props.dispatch(actions.setMessages(this.props.commentList.toJS(), 'danger', 'popup'))
       }
     }
   }
 
   componentDidMount() {
+    if (this.props.commentList.get('path') == this.context.getPath(this.props) && this.props.commentList.get('messages')) {
+      this.props.dispatch(actions.setMessages(this.props.commentList.toJS(), 'danger', 'popup'))
+    }
     var email = localStorage.getItem('email')
     if (email) {
       this.setState({email})
@@ -138,7 +135,7 @@ export default class Comment extends Component {
   onMore = (e) => {
     e.preventDefault();
     this.isMore = true
-    this.context.router.push(e.target.pathname + e.target.search)
+    this.props.history.push(e.target.pathname + e.target.search)
   }
 
 
@@ -194,7 +191,7 @@ export default class Comment extends Component {
     return async (e) => {
       e.preventDefault();
       try {
-        var result = await this.context.fetch( '/' + this.props.params.slug + '/comments/' + comment.get('_id') +'/delete', {}, {})
+        var result = await this.context.fetch( '/' + this.props.match.params.slug + '/comments/' + comment.get('_id') +'/delete', {}, {})
         if (result.messages) {
           this.props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
           return
@@ -215,7 +212,7 @@ export default class Comment extends Component {
     return async (e) => {
       e.preventDefault();
       try {
-        var result = await this.context.fetch( '/' + this.props.params.slug + '/comments/' + comment.get('_id') +'/restore', {}, {})
+        var result = await this.context.fetch( '/' + this.props.match.params.slug + '/comments/' + comment.get('_id') +'/restore', {}, {})
         if (result.messages) {
           this.props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
           return
@@ -250,12 +247,14 @@ export default class Comment extends Component {
       </Main>
     }
 
+    var locationQuery = queryString.parse(this.props.location.search)
+
 
 
     var navigation = ''
     if (commentList.get('more')) {
       let index = commentList.get('results').size ? commentList.get('results').get(-1).get('index') : undefined
-      let to = '/' + this.props.params.slug + '/comments?' + queryString.stringify(Object.assign({}, this.props.location.query, {index}))
+      let to = '/' + this.props.match.params.slug + '/comments?' + queryString.stringify(Object.assign({}, locationQuery, {index}))
       navigation = <nav className="navigation pagination" role="navigation">
         {!this.state.loading && commentList.get('more') ? <Link to={to} className="more" onClick={this.onMore} rel="next">加载更多</Link> : ''}
         {this.state.loading ? <Loading></Loading> : ''}
@@ -335,7 +334,7 @@ export default class Comment extends Component {
     if (this.props.token.get('admin')) {
       menu = <section id="admin-menu">
         <ul id="admin-menu-fixed" className="nav flex-column">
-          <li className="nav-item">{this.props.location.query.deleted ? <Link to={this.props.location.pathname} className="nav-link">已发布</Link> : <Link to={this.props.location.pathname + "?deleted=1"} className="nav-link">回收站</Link>}</li>
+          <li className="nav-item">{locationQuery.deleted ? <Link to={this.props.location.pathname} className="nav-link">已发布</Link> : <Link to={this.props.location.pathname + "?deleted=1"} className="nav-link">回收站</Link>}</li>
         </ul>
       </section>
     }

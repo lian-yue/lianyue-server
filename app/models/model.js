@@ -4,7 +4,7 @@ const markdown = require('./markdown');
 
 mongoose.Promise = global.Promise;
 
-const db = mongoose.createConnection(__CONFIG__.mongodb, {noVirtualId: true, useNestedStrict: true,id: false});
+const db = mongoose.createConnection(require('config/mongodb'), {noVirtualId: true, useNestedStrict: true,id: false});
 
 function Integer(key, options) {
   mongoose.SchemaType.call(this, key, options, 'Integer')

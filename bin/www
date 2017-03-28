@@ -4,27 +4,74 @@ const http  = require('http');
 const port  = normalizePort(process.env.PORT || '3000');
 const host  = process.env.HOST || '0.0.0.0'
 
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+
+
+var server
 if (process.env.NODE_ENV == 'development') {
-  require('babel-polyfill')
-  require('babel-core/register')(require('../config/babel')(true))
-  var app = require('../app');
+  const webpack = require('webpack')
+  const MemoryFileSystem  = require('memory-fs')
+
+  const config = require('../webpack.config.server')
+
+  const fs = new MemoryFileSystem()
+  const compiler = webpack(config)
+
+  // compiler.outputFileSystem = fs
+  compiler.watch({
+    aggregateTimeout: 1000,
+    poll: true,
+  }, (err, stats) => {
+    if (err) {
+      throw err
+    }
+    stats = stats.toJson()
+    stats.errors.forEach(err => console.error(err))
+    stats.warnings.forEach(err => console.warn(err))
+
+    if (!server) {
+      server = app()
+    }
+  })
 } else {
-  var app = require('../dist');
+  server = app()
 }
 
-// proxy
-app.proxy = true
 
+function app() {
+  if (process.env.NODE_ENV == 'development') {
+    process.env.DEBUG = '*';
+    let koaWebpack = require('koa-webpack');
+    let configs = require('../webpack.config.client');
 
-const server = http.createServer(app.callback());
+    var app = require('../dev')()
+    configs.forEach(function(config) {
+      app.middleware.unshift(koaWebpack({
+        config,
+        dev: {
+          noInfo: true,
+        },
+        hot: {
+          noInfo: true,
+        },
+      }))
+    })
+  } else {
+    var app = require('../dist')()
+  }
 
-server.listen(port, host);
-server.on('error', onError);
-server.on('listening', onListening);
+  // proxy
+  app.proxy = true
 
-if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = 'production';
+  var server = http.createServer(app.callback());
+
+  server.listen(port, host);
+  server.on('error', onError);
+  server.on('listening', onListening);
+
+  return server
 }
+
 
 
 function normalizePort(val) {

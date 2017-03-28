@@ -1,3 +1,5 @@
+import {password as adminPassword } from 'config/admin'
+
 export default async function(ctx) {
   var e;
 
@@ -10,7 +12,7 @@ export default async function(ctx) {
     throw e;
   }
 
-  if (password !== __CONFIG__.admin.password) {
+  if (password !== adminPassword) {
     e = new Error('密码错误');
     e.code = 'ValidatorError';
     throw e;

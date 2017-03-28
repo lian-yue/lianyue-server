@@ -1,12 +1,12 @@
 import { Types } from 'mongoose'
-import Comment from '../../models/comment'
+import Comment from 'models/comment'
 
 const ObjectId = Types.ObjectId
 
 export default async function(ctx) {
   var e
   var token
-  var limit = 100
+  var limit = 10
   var sort = {
     createdAt: -1,
   }

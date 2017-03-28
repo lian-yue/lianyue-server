@@ -1,6 +1,6 @@
 import { Types } from 'mongoose'
-import Post from '../../models/post'
-import Tag from '../../models/tag'
+import Post from 'models/post'
+import Tag from 'models/tag'
 export default async (ctx, next) => {
   var e
   const token = await ctx.token(1)

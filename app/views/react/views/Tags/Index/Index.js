@@ -1,7 +1,9 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import queryString from 'query-string'
+import site from 'config/site'
+
 
 import actions from '../../../actions'
 
@@ -9,7 +11,7 @@ import Loading from '../../../components/Loading'
 
 import Main from '../../../components/Main'
 
-const { site } = __CONFIG__
+
 
 const title = '标签列表'
 
@@ -27,12 +29,11 @@ if (__SERVER__) {
 
 @connect(state => ({
   tagList: state.get('tagList'),
-  routing: state.get('routing'),
+  router: state.get('router'),
   token: state.get('token'),
 }))
 export default class Index extends Component {
   static contextTypes = {
-    router: React.PropTypes.object.isRequired,
     fetch: React.PropTypes.func.isRequired,
     getPath: React.PropTypes.func.isRequired,
     toUrl: React.PropTypes.func.isRequired,
@@ -81,7 +82,7 @@ export default class Index extends Component {
     }
     this.setState({loading: true})
     try {
-      var result = await this.context.fetch('/tags', props.location.query)
+      var result = await this.context.fetch(props.location.pathname, props.location.search)
       props.dispatch(actions.addTagList(result))
     } catch (e) {
       props.dispatch(actions.setMessages([e, '请重试'], 'danger', 'popup'))
@@ -93,7 +94,7 @@ export default class Index extends Component {
   onMore = (e) => {
     e.preventDefault();
     this.isMore = true
-    this.context.router.push(e.target.pathname + e.target.search)
+    this.props.dispatch(actions.router.push(e.target.pathname + e.target.search))
   }
 
 
@@ -117,11 +118,13 @@ export default class Index extends Component {
 
     var location = this.props.location
 
-    var page = parseInt(location.query.page || 1)
+    var locationQuery = queryString.parse(this.props.location.search);
+
+    var page = parseInt(locationQuery.page || 1)
     if (isNaN(page)) {
       page = 1
     }
-    var search = (location.query.search || '').trim()
+    var search = (locationQuery.search || '').trim()
 
 
 
@@ -172,7 +175,7 @@ export default class Index extends Component {
     if (this.props.token.get('admin')) {
       menu = <section id="admin-menu">
         <ul id="admin-menu-fixed" className="nav flex-column">
-          <li className="link-item">{this.props.location.query.state == -1 ? <Link to="/tags" className="link-link">已发布</Link> : <Link to="/tags?state=-1" className="link-link">已禁用</Link>}</li>
+          <li className="link-item">{locationQuery.state == -1 ? <Link to="/tags" className="link-link">已发布</Link> : <Link to="/tags?state=-1" className="link-link">已禁用</Link>}</li>
           <li  className="link-item"><Link to="/tags/create" className="link-link">创建</Link></li>
         </ul>
       </section>

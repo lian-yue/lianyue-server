@@ -1,5 +1,4 @@
 import koaRouter from 'koa-router'
-import koaConvert from 'koa-convert'
 import koaBody from 'koa-body'
 
 import body from '../middlewares/body'
@@ -9,20 +8,23 @@ import admin from '../middlewares/admin'
 
 import id from './middlewares/id'
 
-const router = koaRouter();
+
+export default function router() {
+  const router = koaRouter();
 
 
-router.get('/', admin, require('./index'));
-router.get('/:id', admin, id, require('./read'));
+  router.get('/', admin, require('./index'));
+  router.get('/:id', admin, id, require('./read'));
 
-router.use(token)
-router.use(admin)
+  router.use(token)
+  router.use(admin)
 
-router.post('/create', bodyMultipart, require('./create'));
+  router.post('/create', bodyMultipart, require('./create'));
 
-router.del('/:id', id, require('./delete'));
-router.post('/:id/delete', id, require('./delete'));
+  router.del('/:id', id, require('./delete'));
+  router.post('/:id/delete', id, require('./delete'));
 
-router.post('/:id/restore', id, require('./restore'));
+  router.post('/:id/restore', id, require('./restore'));
 
-export default router;
+  return router
+}

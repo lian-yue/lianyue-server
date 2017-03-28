@@ -1,4 +1,4 @@
-import Tag from '../../models/tag'
+import Tag from 'models/tag'
 export default async (ctx, next) => {
   var tag = ctx.state.tag
   tag = await tag.populate({

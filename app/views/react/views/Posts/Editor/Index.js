@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
 import { Field, reduxForm } from 'redux-form/immutable'
+import site from 'config/site'
 
 
 import actions from '../../../actions'
@@ -16,15 +17,12 @@ import FieldContent from '../../../components/Markdown/Editor'
 
 import FieldTags from './Tags'
 
-const { site } = __CONFIG__
-
 @connect(state => ({}))
 @reduxForm({
   form: 'postEditor'
 })
 export default class Editor extends Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired,
     fetch: PropTypes.func.isRequired,
   }
 
@@ -47,14 +45,14 @@ export default class Editor extends Component {
     }
     body.tags = body.tags.join(',')
 
-    var slug = this.props.params.slug
+    var slug = this.props.match.params.slug
     try {
       var result = await this.context.fetch((slug ?  '/' + slug : '/create'), {}, body)
       if (result.messages) {
         this.props.dispatch(actions.setMessages(result))
         return
       }
-      this.context.router.push(result.uri + '?message=' + (slug ? 'update' : 'create') + '&r='+ Date.now())
+      this.props.dispatch(actions.router.push(result.uri + '?message=' + (slug ? 'update' : 'create') + '&r='+ Date.now()))
     } catch (e) {
       this.props.dispatch(actions.setMessages(e))
     }
@@ -62,7 +60,7 @@ export default class Editor extends Component {
 
 
   async fetch(props) {
-    var slug = props.params.slug
+    var slug = props.match.params.slug
     if (!slug) {
       return
     }
@@ -92,7 +90,7 @@ export default class Editor extends Component {
     const {handleSubmit, pristine, submitting} = this.props
     const post = this.props.postEditor
     var title = '创建文章'
-    if (this.props.params.slug) {
+    if (this.props.match.params.slug) {
       title = '编辑文章'
     }
 

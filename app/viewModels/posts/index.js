@@ -1,8 +1,8 @@
 import moment from 'moment'
 import { Types } from 'mongoose'
 
-import Post from '../../models/post'
-import Tag from '../../models/tag'
+import Post from 'models/post'
+import Tag from 'models/tag'
 
 
 export default async function(ctx) {
@@ -19,8 +19,6 @@ export default async function(ctx) {
     query.deletedAt = {$exists: false}
     query.page = {$exists: !!ctx.query.isPage}
   }
-
-
 
 
   var tag = null

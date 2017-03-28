@@ -1,7 +1,11 @@
 import server from './server'
 
+if(module.hot) {
+  module.hot.accept();
+}
+
 export default async function(ctx, relPath, state) {
-  if (typeof ctx.body == 'string') {
+  if (typeof ctx.body == 'string' || ctx.body) {
     return
   }
   ctx.body = ''
@@ -13,13 +17,14 @@ export default async function(ctx, relPath, state) {
   }
 
   toJSONObject(state)
-  
+
   var {redirect, body} = await server(state, ctx);
 
   if (redirect) {
     ctx.redirect(redirect.pathname + redirect.search)
     return;
   }
+
   if (!body) {
     var e = new Error('React match is empty');
     e.status = 404

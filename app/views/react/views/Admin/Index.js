@@ -1,13 +1,14 @@
 import React, { Component, PropTypes } from 'react'
-import { Link } from 'react-router'
 import { connect } from 'react-redux'
+import queryString from 'query-string'
+
+import site from 'config/site'
 
 import actions from '../../actions'
 
 import Main from '../../components/Main'
 import Messages from '../../components/Messages'
 
-const { site } = __CONFIG__
 
 const title = '管理员登录';
 
@@ -18,7 +19,6 @@ const title = '管理员登录';
 export default class Admin extends Component {
 
   static contextTypes = {
-    router: React.PropTypes.object.isRequired,
     fetch: React.PropTypes.func.isRequired,
   }
 
@@ -27,9 +27,9 @@ export default class Admin extends Component {
   }
 
   componentDidMount() {
-    var query = Object.assign({}, this.props.location.query);
+    var query = queryString.parse(this.props.location.search);
     if (this.props.token.get('admin')) {
-      this.context.router.push(query.redirect_uri || '/')
+      this.props.dispatch(actions.router.push(query.redirect_uri || '/'))
       return
     }
     if (query.message) {
@@ -52,9 +52,9 @@ export default class Admin extends Component {
         return
       }
       this.props.dispatch(actions.setToken(token))
-      var query = this.props.location.query;
+      var query = queryString.parse(this.props.location.search);
       var redirectUri = query.redirect_uri || '/';
-      this.context.router.push(redirectUri)
+      this.props.history.push(redirectUri)
     } catch (e) {
       this.props.dispatch(actions.setMessages(e.message))
     } finally {

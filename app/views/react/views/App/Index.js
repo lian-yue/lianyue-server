@@ -1,16 +1,71 @@
 import React, {Component, PropTypes, Children} from 'react';
-import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Link, IndexLink } from 'react-router'
+import { Link, Route, Switch } from 'react-router-dom'
+
 import queryString from 'query-string'
+
+import site from 'config/site'
 
 import actions from '../../actions'
 
 import Messages from '../../components/Messages'
 
-const { site } = __CONFIG__
+
+function asyncComponent(cl, ...paths) {
+  var RenderComponent;
 
 
+  class AsyncComponent extends Component {
+    state = {}
+
+    async asyncComponent() {
+      RenderComponent = await cl()
+    }
+
+    async componentDidMount() {
+      if (!RenderComponent) {
+        RenderComponent = await cl()
+        this.setState({component: true})
+      }
+    }
+
+    componentWillReceiveProps(nextProps) {
+      if (this.props.token && !this.props.token.get('admin')) {
+        this.props.dispatch(actions.router.push('/admin?message=401&redirect_uri=' + encodeURIComponent(this.props.location.pathname + this.props.location.search)))
+      }
+    }
+
+    render() {
+      if (!RenderComponent) {
+        return null
+      }
+      if (this.props.token && !this.props.token.get('admin')) {
+        return null
+      }
+      return <RenderComponent {...this.props} />
+    }
+  }
+
+  if (paths.length) {
+    return connect(state => {
+      return ({token: state.get('token')})
+    })(AsyncComponent);
+  }
+  return AsyncComponent
+}
+
+
+const ErrorsNotFoundComponent = asyncComponent(() => System.import('../Errors/NotFound'));
+const AdminComponent = asyncComponent(() => System.import('../Admin'));
+
+const PostsIndexComponent = asyncComponent(() => System.import('../Posts/Index'));
+const PostsReadComponent = asyncComponent(() => System.import('../Posts/Read'));
+const PostsEditorComponent = asyncComponent(() => System.import('../Posts/Editor'), true);
+const PostsCommentComponent = asyncComponent(() => System.import('../Posts/Comment'));
+const CommentComponent = asyncComponent(() => System.import('../Comment'), true);
+
+const TagsIndexComponent = asyncComponent(() => System.import('../Tags/Index'));
+const TagsEditorComponent = asyncComponent(() => System.import('../Tags/Editor'));
 
 var componentServerMount
 if (__SERVER__) {
@@ -27,15 +82,9 @@ if (__SERVER__) {
   messages: state.get('messages'),
   token: state.get('token'),
   protocol: state.get('protocol'),
+  router: state.get('router'),
 }))
 export default class App extends Component{
-  state = {
-    github: '',
-    email: '',
-    feed: '',
-  }
-
-
   static childContextTypes = {
     fetch: React.PropTypes.func,
     getPath: React.PropTypes.func,
@@ -43,6 +92,11 @@ export default class App extends Component{
     onChange: React.PropTypes.func,
   }
 
+  state = {
+    github: '',
+    email: '',
+    feed: '',
+  }
 
   getChildContext() {
     return {
@@ -52,27 +106,37 @@ export default class App extends Component{
       onChange: this.onChange,
     }
   }
+
   componentServerMount = componentServerMount
 
   toUrl = (pathname, query) => {
     pathname = pathname || '/'
     var url = this.props.protocol + site.uri + (pathname == '/' ? pathname : pathname.replace(/\/$/, ''))
-    query = queryString.stringify(query)
-    if (query) {
-      url += '?' + query
+    if (!query) {
+
+    } else if (typeof query == 'object') {
+      query = queryString.stringify(query)
+      if (query) {
+        url += '?' + query
+      }
+    } else {
+      url += query.charAt(0) == '?' ? query : '?' + query
     }
     return url
   }
 
 
   getPath = (props) => {
-    props = props || this.props
-    return props.location.pathname + props.location.search
+    var location = props && props.location ? props.location : this.props.router.get('location').toJS()
+    return location.pathname + location.search
   }
 
   fetch = async (url, query, body, headers) => {
     headers = headers || {}
     query = query || {}
+    if (typeof query != 'object') {
+      query = queryString.parse(query)
+    }
     var opt = {}
 
     if (body && typeof body == 'object') {
@@ -202,10 +266,6 @@ export default class App extends Component{
     this.onResize()
   }
 
-  static contextTypes = {
-    router: React.PropTypes.object.isRequired,
-  }
-
   onResize() {
     const html = document.documentElement
     const footer = document.getElementById('footer')
@@ -225,7 +285,7 @@ export default class App extends Component{
   componentDidUpdate(props) {
     const popup = this.props.messages.get('popup')
     if(popup && !popup.get('close')) {
-      if (this.props.location.key != props.location.key) {
+      if (this.props.router.getIn(['location', 'key']) != props.router.getIn(['location', 'key'])) {
         this.props.dispatch(actions.closeMessages('popup'))
       } else {
         setTimeout(() => {
@@ -234,7 +294,7 @@ export default class App extends Component{
       }
     }
 
-    if (this.props.location.key != props.location.key && document.body.className) {
+    if (this.props.router.getIn(['location', 'key']) != props.router.getIn(['location', 'key']) && document.body.className) {
       setTimeout(function() {
         document.body.className = document.body.className.replace(/\s*header-open\s*/, '')
       }, 30)
@@ -250,21 +310,24 @@ export default class App extends Component{
     document.body.className = document.body.className.replace(/\s*header-open\s*/, '')
   }
 
+
+
+
   render() {
-    const pathname = this.props.location.pathname
+    const pathname = this.props.router.getIn(['location', 'pathname'])
 
     return <div id="wrapper">
       <header id="header" role="banner">
         <div id="profile">
           <div id="logo">
-              <IndexLink to="/" title={site.title + ' - ' + site.description} rel="home">
+              <Link to="/" title={site.title + ' - ' + site.description} rel="home">
                 {site.title}
-              </IndexLink>
+              </Link>
           </div>
           <h1 className="site-name">
-            <IndexLink to="/" title={site.title + ' - ' + site.description} rel="home">
+            <Link to="/" title={site.title + ' - ' + site.description} rel="home">
               {site.title}
-            </IndexLink>
+            </Link>
           </h1>
           <p className="site-description">{site.description}</p>
         </div>
@@ -286,7 +349,22 @@ export default class App extends Component{
           </nav>
         </div>
       </header>
-      <div id="container">{this.props.children}</div>
+      <div id="container">
+        <Switch>
+          <Route exact path="/tags" component={TagsIndexComponent} />
+          <Route exact path="/tags/create" component={TagsEditorComponent} />
+          <Route exact path="/tags/:tag/update" component={TagsEditorComponent} />
+          <Route exact path="/admin" component={AdminComponent} />
+          <Route exact path="/comments" component={CommentComponent} />
+          <Route exact path="/tag-:tag" component={PostsIndexComponent} />
+          <Route exact path="/create" component={PostsEditorComponent} />
+          <Route exact path="/:slug/comments" component={PostsCommentComponent} />
+          <Route exact path="/:slug" component={PostsReadComponent} />
+          <Route exact path="/:slug/update" component={PostsEditorComponent} />
+          <Route exact path="/" component={PostsIndexComponent} />
+          <Route component={ErrorsNotFoundComponent} />
+        </Switch>
+      </div>
       <footer id="footer" role="contentinfo">
         <div className="info">
           <span className="copyright">Copyright&nbsp;&#169;&nbsp;2009-2016&nbsp;<a href={site.uri}>{site.title}</a>&nbsp;All Rights Reserved!</span>

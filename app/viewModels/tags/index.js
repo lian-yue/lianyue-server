@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import Tag from '../../models/tag'
+import Tag from 'models/tag'
 const ObjectId = Types.ObjectId
 export default async (ctx, next) => {
   var e

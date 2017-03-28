@@ -1,4 +1,6 @@
 import { Schema, Types } from 'mongoose'
+import retain from 'config/retain'
+
 import model from './model'
 import Tag from './tag'
 
@@ -19,9 +21,7 @@ var schema = new Schema({
     },
     validate: [
       {
-        validator: function(slug) {
-          return __CONFIG__.retain(slug);
-        },
+        validator: retain,
         message: 'Slug 名被系统保留 ({PATH})',
       },
       {

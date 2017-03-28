@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const mmmagic = require('mmmagic');
+const configConfig = require('config/storage');
 
 import { Schema } from 'mongoose'
 
@@ -35,7 +36,7 @@ var schema = new Schema({
     validate: [
       {
         validator: function(type) {
-          return !!__CONFIG__.storage.types[type];
+          return !!configConfig.types[type];
         },
         message: '文件类型不允许 ({PATH})',
       },
@@ -58,7 +59,7 @@ var schema = new Schema({
     type: Schema.Types.Integer,
     index: true,
     default: 0,
-    max: [__CONFIG__.storage.size, '文件不能大于 '+ (__CONFIG__.storage.size / 1024 /1024) +'MB  ({PATH})']
+    max: [configConfig.size, '文件不能大于 '+ (configConfig.size / 1024 /1024) +'MB  ({PATH})']
   },
 
   md5: {
@@ -92,12 +93,12 @@ var schema = new Schema({
 
 
 schema.methods.uri = function(width = 0, height = 0, crop = 0, enlarge = 0, extension = 'jpg') {
-  return __CONFIG__.storage.uri + this.get('path') + '!' + ([width, height, crop, enlarge].join('_')) + '.' + extension;
+  return configConfig.uri + this.get('path') + '!' + ([width, height, crop, enlarge].join('_')) + '.' + extension;
 }
 
 
 schema.virtual('original').get(function() {
-  return __CONFIG__.storage.uri + this.get('path');
+  return configConfig.uri + this.get('path');
 });
 
 
@@ -264,8 +265,8 @@ schema.pre('validate', async function() {
   // 新目录
   var names = this.get('name').split('.');
   var extension = names.length > 1 ? names[names.length - 1].toLowerCase() : '';
-  if (__CONFIG__.storage.types[type] && __CONFIG__.storage.types[type].indexOf(extension) == -1) {
-    extension = __CONFIG__.storage.types[type][0];
+  if (configConfig.types[type] && configConfig.types[type].indexOf(extension) == -1) {
+    extension = configConfig.types[type][0];
   }
 
   var date = new Date();
@@ -297,7 +298,7 @@ schema.pre('save', async function() {
     return;
   }
   var originalPath = this.$_originalPath
-  var newPath = __CONFIG__.storage.dir + this.get('path')
+  var newPath = configConfig.dir + this.get('path')
   await mkdirPromise(path.dirname(newPath));
 
 

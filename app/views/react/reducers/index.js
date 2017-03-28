@@ -1,7 +1,7 @@
 import {combineReducers} from "redux-immutable";
 import { reducer as form } from 'redux-form/immutable'
 
-import routing from './routing'
+import router from './router'
 import protocol from './protocol'
 import headers from './headers'
 import token from './token'
@@ -18,10 +18,11 @@ import tagRead from './tagRead'
 
 
 import commentList from './commentList'
+import links from './links'
 
 
 export default combineReducers({
-  routing,
+  router,
   protocol,
   headers,
   token,
@@ -33,4 +34,5 @@ export default combineReducers({
   tagList,
   tagRead,
   commentList,
+  links,
 })
