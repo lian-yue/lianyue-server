@@ -1,6 +1,6 @@
 {
   "name": "lianyue-server",
-  "version": "0.1.209",
+  "version": "0.1.216",
   "private": true,
   "author": "lianyue <admin@lianyue.org>",
   "description": "",
@@ -14,11 +14,12 @@
     "test-client": "cross-env NODE_ENV=development karma start",
     "test": "cross-env NODE_ENV=development mocha \"test/models/*.js\" \"test/models/*/**.js\" --timeout 38000 --compilers js:./test",
     "dev": "rm -rf dev/* &&  cross-env NODE_ENV=development node ./bin/www",
-    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules --colors --config  webpack.config.build.js"
+    "build": "rm -rf dist/* && cross-env NODE_ENV=production webpack --progress --hide-modules --colors --config  webpack.config.build.js"
   },
   "engines": {
     "node": ">= 6.0.0",
-    "npm": ">= 3.0.0"
+    "npm": ">= 3.0.0",
+    "pm2": ">= 2.0.0"
   },
   "dependencies": {
     "babel-runtime": "^6.23.0",
@@ -33,14 +34,13 @@
     "immutable": "^3.8.1",
     "koa": "^2.0.1",
     "koa-body": "^2.0.0",
-    "koa-router": "^7.0.1",
     "koa-static": "^3.0.0",
     "markdown-x": "^0.4.0-beta.2",
     "mmmagic": "^0.4.5",
     "moment": "^2.14.1",
     "mongoose": "^4.8.1",
     "nodemailer": "^2.7.2",
-    "pm2": "^2.4.1",
+    "path-to-regexp": "^1.7.0",
     "query-string": "^4.2.2",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",

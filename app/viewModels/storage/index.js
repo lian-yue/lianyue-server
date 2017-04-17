@@ -1,5 +1,7 @@
-import Storage from 'models/storage'
-const ObjectId = require('mongoose').Types.ObjectId;
+import { Storage } from 'models'
+import { Types } from 'mongoose'
+
+const ObjectId = Types.ObjectId
 
 
 
@@ -96,5 +98,5 @@ export default async function(ctx) {
   if (more) {
     results.pop();
   }
-  await ctx.render({results, more});
+  ctx.vmState({results, more});
 }

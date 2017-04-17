@@ -10,8 +10,6 @@ const packageInfo       = require('./package')
 
 var ignoreModules = fs.readdirSync('node_modules')
 
-
-
 process.env.NODE_ENV = process.env.NODE_ENV || 'production'
 
 const isDev = process.env.NODE_ENV == 'development'
@@ -50,7 +48,7 @@ module.exports = {
         return callback(null, 'commonjs2 ../' + request);
       }
 
-      //  config 配置文件
+      //  package 配置文件
       if (pathStart == 'package') {
         return callback(null, 'commonjs2 ../' + request);
       }
@@ -64,11 +62,22 @@ module.exports = {
       path.join(__dirname, 'node_modules'),
       path.join(__dirname, 'app'),
     ],
-    extensions: [isDev ? '.dev.js' : '.prod.js', isDev ? '.dev.jsx' : '.prod.jsx', '.js', '.jsx', '.ejs', '.json', '.css', '.less', '.sass', '.scss', '.styl'],
+    extensions: [
+      isDev ? '.dev.js' : '.prod.js',
+      '.js',
+      isDev ? '.dev.jsx' : '.prod.jsx',
+      '.jsx',
+      '.json',
+      '.ejs',
+      '.css',
+      '.less',
+      '.sass',
+      '.scss',
+      '.styl',
+    ],
   },
 
   target: 'node',
-
 
   node: {
     console: false,
@@ -92,7 +101,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
+        test: /\.jsx?$/,
         use: [
           {
             loader: 'babel-loader',
@@ -105,7 +114,7 @@ module.exports = {
               plugins: [
                 "transform-decorators-legacy",
                 "transform-runtime",
-                "add-module-exports",
+                // "add-module-exports",
               ],
               cacheDirectory: isDev
             },
@@ -116,7 +125,7 @@ module.exports = {
         ],
       },
       {
-        test: /\.(ejs)$/,
+        test: /\.ejs$/,
         use: [
           {
             loader: 'ejs-loader',
@@ -157,14 +166,11 @@ module.exports = {
     new webpack.NoEmitOnErrorsPlugin(),
   ],
 
-
   devtool: isDev ? 'eval-source-map' : 'source-map'
 }
 
 
 if (isDev) {
-  // module.exports.entry.index.unshift('react-hot-loader/patch', 'webpack/hot/poll?1000')
   module.exports.entry.index.unshift('webpack/hot/poll?1000')
   module.exports.plugins.push(new webpack.HotModuleReplacementPlugin(), new webpack.NamedModulesPlugin())
-
 }

@@ -20,23 +20,6 @@ import Comment from '../Comment'
 
 
 
-
-
-var componentServerMount
-if (__SERVER__) {
-  componentServerMount = async function componentServerMount(ctx, state) {
-    if (!state) {
-      return
-    }
-    state.path = this.context.getPath()
-    this.props.dispatch(actions.setPostRead(state))
-  }
-}
-
-
-
-
-
 @connect(state => ({
   postRead: state.get('postRead'),
   router: state.get('router'),
@@ -54,24 +37,19 @@ export default class Read extends Component {
   }
 
 
-  componentServerMount = componentServerMount
-
-
-
   async fetch(props) {
     if (this.state.loading) {
       return false
     }
     this.setState({loading: true})
+    var path = this.context.getPath(props)
+    await props.dispatch(actions.setPostRead({path}))
     try {
       var result = await this.context.fetch(props.location.pathname, props.location.search)
-      result.path = this.context.getPath(this.props)
-      props.dispatch(actions.setPostRead(result))
-      if (result.messages) {
-        props.dispatch(actions.setMessages(result, 'danger', 'popup'))
-      }
+      result.path = path
+      await props.dispatch(actions.setPostRead(result))
     } catch (e) {
-      props.dispatch(actions.setMessages([e, '请重试'], 'danger', 'popup'))
+      await props.dispatch(actions.setMessages(e, 'danger', 'popup'))
     } finally {
       this.setState({loading: false})
     }
@@ -79,24 +57,15 @@ export default class Read extends Component {
 
 
   componentWillMount() {
-    if (!__SERVER__) {
-      if (this.props.postRead.get('path') != this.context.getPath(this.props)) {
-        this.props.dispatch(actions.clearPostRead())
-        this.fetch(this.props)
-      }
+    if (__SERVER__) {
+      return
     }
-  }
-
-
-  componentDidMount() {
-    if (this.props.postRead.get('path') == this.context.getPath(this.props) && this.props.postRead.get('messages')) {
-      this.props.dispatch(actions.setMessages(this.props.postRead.toJS(), 'danger', 'popup'))
-    }
+    this.componentWillReceiveProps(this.props)
   }
 
   componentWillReceiveProps(nextProps) {
     var props = this.props
-    if (this.state.loading || this.context.getPath(props) == this.context.getPath(nextProps)) {
+    if (this.state.loading || nextProps.postRead.get('path') == this.context.getPath(nextProps)) {
       return
     }
     props.dispatch(actions.clearPostRead())
@@ -105,16 +74,10 @@ export default class Read extends Component {
 
 
 
-
-
   onDelete = async (e) => {
     e.preventDefault();
     try {
-      var result = await this.context.fetch(this.props.postRead.get('uri') +'/delete', {}, {})
-      if (result.messages) {
-        this.props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
-        return
-      }
+      var result = await this.context.fetch(this.props.postRead.get('url') +'/delete', {}, {})
       this.props.dispatch(actions.clearPostRead())
       this.props.dispatch(actions.clearPostList())
 
@@ -127,11 +90,7 @@ export default class Read extends Component {
   onRestore = async (e) => {
     e.preventDefault();
     try {
-      var result = await this.context.fetch(this.props.postRead.get('uri') +'/restore', {}, {})
-      if (result.messages) {
-        this.props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
-        return
-      }
+      var result = await this.context.fetch(this.props.postRead.get('url') +'/restore', {}, {})
 
       this.props.dispatch(actions.clearPostRead())
       this.props.dispatch(actions.clearPostList())
@@ -147,9 +106,13 @@ export default class Read extends Component {
 
   render () {
     var post = this.props.postRead;
-    if (this.state.loading || post.get('messages')) {
+    if (this.state.loading || !post.get('_id')) {
       return <Main
+        status={this.state.loading ? 200 : 404}
         title={["文章内容", site.title]}
+        meta={[
+          {name: 'robots', content:'none'},
+        ]}
         breadcrumb={['文章内容']}
         statistics={false}
         >
@@ -162,7 +125,7 @@ export default class Read extends Component {
     var prev = post.get('prev')
     var next = post.get('next')
     var createdAt = moment(post.get('createdAt')).format()
-    var postUri = post.get('uri') || '/'
+    var postUrl = post.get('url') || '/'
 
     var headers = {
       html: {},
@@ -202,7 +165,7 @@ export default class Read extends Component {
     headers.link.push({
       rel: 'canonical',
       type: "text/html",
-      href: this.context.toUrl(postUri),
+      href: this.context.toUrl(postUrl),
     })
 
     if (prev) {
@@ -210,7 +173,7 @@ export default class Read extends Component {
         rel: 'prev',
         type: "text/html",
         title: prev.get('title'),
-        href: this.context.toUrl(prev.get('uri')),
+        href: this.context.toUrl(prev.get('url')),
       })
     }
 
@@ -219,7 +182,7 @@ export default class Read extends Component {
         rel: 'next',
         type: "text/html",
         title: next.get('title'),
-        href: this.context.toUrl(next.get('uri')),
+        href: this.context.toUrl(next.get('url')),
       })
     }
 
@@ -229,7 +192,7 @@ export default class Read extends Component {
     } else {
       if (post.get('tags').size && post.getIn(['tags', 0])) {
         var tag = post.getIn(['tags', 0])
-        headers.breadcrumb.push({to: tag.get('postUri'), name: tag.getIn(['names', 0])})
+        headers.breadcrumb.push({to: tag.get('postUrl'), name: tag.getIn(['names', 0])})
       }
       headers.breadcrumb.push('文章内容')
     }
@@ -243,7 +206,7 @@ export default class Read extends Component {
           if (!tag) {
             return
           }
-          return <Link key={tag.get('_id')}  to={tag.get('postUri')} rel="tag">{tag.getIn(['names', 0])}</Link>
+          return <Link key={tag.get('_id')}  to={tag.get('postUrl')} rel="tag">{tag.getIn(['names', 0])}</Link>
         })}
          </span>
       </p>
@@ -253,7 +216,7 @@ export default class Read extends Component {
     var footer = ''
     if (!post.get('page') && post.get('_id')) {
       footer = <footer className="entry-footer">
-        <p>原文链接：<Link to={postUri}>{this.context.toUrl(postUri)}</Link></p>
+        <p>原文链接：<Link to={postUrl}>{this.context.toUrl(postUrl)}</Link></p>
         <p>发表时间：<time className="entry-date" itemProp="datePublished" dateTime={createdAt} title={createdAt}>{createdAt ? moment(post.get('createdAt')).format('YYYY-MM-DD hh:mm:ss') : ''}</time></p>
         {footerTags}
       </footer>
@@ -270,7 +233,7 @@ export default class Read extends Component {
       menu = (
         <section id="admin-menu">
           <ul id="admin-menu-fixed" className="nav flex-column">
-            <li className="nav-item"><Link to={postUri + '/update'} className="nav-link">编辑</Link></li>
+            <li className="nav-item"><Link to={postUrl + '/update'} className="nav-link">编辑</Link></li>
             <li className="nav-item">{post.get('deletedAt') ? <a href="#" onClick={this.onRestore} className="nav-link">恢复</a> : <a href="#" onClick={this.onDelete} className="nav-link">删除</a>}</li>
           </ul>
         </section>
@@ -281,8 +244,8 @@ export default class Read extends Component {
 
     if (prev || next) {
       pagination = <nav className="pagination posts-pagination">
-        {prev ? <Link to={prev.get('uri')} className="prev" rel="prev">{prev.get('title')}</Link> : ''}
-        {next ? <Link to={next.get('uri')} className="next" rel="next">{next.get('title')}</Link> : ''}
+        {prev ? <Link to={prev.get('url')} className="prev" rel="prev">{prev.get('title')}</Link> : ''}
+        {next ? <Link to={next.get('url')} className="next" rel="next">{next.get('title')}</Link> : ''}
       </nav>
     }
 
@@ -292,7 +255,7 @@ export default class Read extends Component {
           <article className="markdown entry hentry" itemScope itemType="http://schema.org/BlogPosting">
             <header className="entry-header">
               <h1 className="entry-title">
-                <Link to={postUri} rel="bookmark" title={post.get('title')} itemProp="headline">{post.get('title')}</Link>
+                <Link to={postUrl} rel="bookmark" title={post.get('title')} itemProp="headline">{post.get('title')}</Link>
               </h1>
               <div className="entry-meta">
                 <time className="entry-date" itemProp="datePublished" dateTime={createdAt} title={createdAt}>{moment(post.get('createdAt')).fromNow()}</time>
@@ -300,7 +263,7 @@ export default class Read extends Component {
                   {post.getIn(['meta', 'views']) + '次浏览'}
                 </span>
                 <span className="comments-link">
-                  <Link to={postUri + "#comments"} rel="nofollow">{post.getIn(['meta', 'comments']) + '条评论'}</Link>
+                  <Link to={postUrl + "#comments"} rel="nofollow">{post.getIn(['meta', 'comments']) + '条评论'}</Link>
                 </span>
               </div>
             </header>

@@ -10,6 +10,7 @@ import actions from '../actions'
 @connect(state => ({router: state.get('router')}))
 export default class Main extends Component {
   static propTypes = {
+    status: PropTypes.number,
     html: PropTypes.object,
     title: PropTypes.array,
     meta: PropTypes.array,
@@ -20,6 +21,7 @@ export default class Main extends Component {
   }
 
   static defaultProps = {
+    status: 200,
     html: {},
     title: [],
     meta: [],
@@ -30,14 +32,19 @@ export default class Main extends Component {
   }
 
 
-
   componentWillMount() {
-    const {title, meta, link, html, breadcrumb} = this.props;
-    var headers = {title, meta, link, html}
-    if (!this.headers || !this.headers.equals(fromJS(headers))) {
-      this.props.dispatch(actions.setHeaders(headers));
-      this.headers = fromJS(headers)
+    if (__SERVER__) {
+      return
+    }
+    this.componentWillReceiveProps(this.props)
+  }
 
+  async fetch(props) {
+    const {status, html, title, meta, link} = props;
+    var headers = fromJS({status, html, title, meta, link})
+    if (!this.headers || !this.headers.equals(headers)) {
+      this.headers = headers
+      await props.dispatch(actions.setHeaders(headers.toJS()));
       if (!__SERVER__) {
         if (this.timer) {
           clearTimeout(this.timer)
@@ -49,14 +56,15 @@ export default class Main extends Component {
         }, 100)
       }
     }
+
   }
 
-  componentDidUpdate() {
-    this.componentWillMount()
+  componentWillReceiveProps(nextProps) {
+    this.fetch(nextProps)
   }
 
   componentWillUnmount() {
-    this.props.dispatch(actions.setHeaders({html: {}, title: [], meta:[], link:[]}));
+    this.props.dispatch(actions.setHeaders({status: 200, html: {}, title: [], meta:[], link:[]}));
     this.unStatistics()
   }
 

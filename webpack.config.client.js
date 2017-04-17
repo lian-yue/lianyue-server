@@ -74,7 +74,6 @@ function config(name, config) {
                   "transform-decorators-legacy",
                   // "transform-vue-jsx",
                   "transform-runtime",
-                  "add-module-exports",
                 ],
                 cacheDirectory: isDev
               },
@@ -265,8 +264,7 @@ function config(name, config) {
         mangle: true,
         minimize: true,
         sourceMap: true,
-      }),
-      new webpack.optimize.OccurrenceOrderPlugin()
+      })
     )
   }
   return config
@@ -290,5 +288,4 @@ if (isDev) {
 module.exports = [
   ie,
   react,
-
 ]

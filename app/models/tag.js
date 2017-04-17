@@ -52,7 +52,7 @@ var schema = new Schema({
       },
       {
         validator: async function(name, cb) {
-          var tag = await module.exports.findByTag(name).read('primary').exec();
+          var tag = await Tag.findByTag(name).read('primary').exec();
           cb(!tag || tag.get('_id').equals(this.get('_id')), '');
         },
         message: '标签"{VALUE}"已存在 ({PATH})',
@@ -159,7 +159,7 @@ schema.pre('save', async function() {
 
   // 摘要
   if (this.isModified('content') && !this.isModified('excerpt')) {
-    this.set('excerpt', this.getMarkdown().getExcerpt(this.get('uri')))
+    this.set('excerpt', this.getMarkdown().getExcerpt(this.get('url')))
   }
 
   // 描述
@@ -177,7 +177,7 @@ schema.set('toJSON', {
   virtuals: true,
 });
 
-schema.virtual('uri').get(function() {
+schema.virtual('url').get(function() {
   var names = this.get('names')
   if (!names || !names.length) {
     return '/tags/' + this.get('_id');
@@ -191,7 +191,7 @@ schema.virtual('uri').get(function() {
   return '/tags/' + encodeURIComponent(name);
 });
 
-schema.virtual('postUri').get(function() {
+schema.virtual('postUrl').get(function() {
   var names = this.get('names')
   if (!names || !names.length) {
     return '/tag-' + this.get('_id');
@@ -222,4 +222,6 @@ schema.statics.findByTag = function(value, projection, callback) {
 }
 
 
-module.exports = model('Tag', schema);
+const Tag = model('Tag', schema);
+
+export default Tag

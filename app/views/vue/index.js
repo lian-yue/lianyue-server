@@ -4,18 +4,13 @@ if(module.hot) {
 
 // import server from './server'
 
-export default async function(ctx, relPath, state) {
-  if (typeof ctx.body == 'string' || ctx.body) {
+export default async function(ctx, next) {
+  if (['GET', 'HEAD'].indexOf(ctx.method) == -1 || (ctx.query.view != 'vue' && ctx.cookies.get('view') != 'vue')) {
+    await next()
     return
   }
-  ctx.body = ''
 
-  if (!relPath || relPath === true || (ctx.method != 'GET' && ctx.method != 'HEAD')) {
-    ctx.set("X-Content-Type-Options", 'nosniff');
-    ctx.body = JSON.stringify(state);
-    return
-  }
-  toJSONObject(state)
+  /*toJSONObject(state)
 
   var {redirect, body} = await server(state, ctx);
 
@@ -32,30 +27,5 @@ export default async function(ctx, relPath, state) {
   }
 
   ctx.type = 'text/html'
-  ctx.body = body
-}
-
-
-
-
-
-
-
-
-
-
-function toJSONObject(state) {
-  for (var key in state) {
-    if (!state[key]) {
-      continue
-    }
-    if (typeof state[key] != 'object') {
-      continue
-    }
-    if (typeof state[key].toJSON == 'function') {
-      state[key] = state[key].toJSON()
-    } else {
-      toJSONObject(state[key])
-    }
-  }
+  ctx.body = body*/
 }

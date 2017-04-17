@@ -13,12 +13,14 @@ const title = "错误消息"
 
 @connect(state => ({}))
 export default class NotFound extends Component {
+
   componentDidMount() {
     this.props.dispatch(actions.setMessages('您请求的页面不存在', 'danger', 'popup'))
   }
 
   render () {
     return <Main
+      status={404}
       title={[title, site.title]}
       meta= {[
         {name: 'robots', content:'none'},

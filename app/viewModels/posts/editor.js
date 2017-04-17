@@ -1,6 +1,6 @@
 import { Types } from 'mongoose'
-import Post from 'models/post'
-import Tag from 'models/tag'
+import {Post, Tag} from 'models'
+
 export default async (ctx, next) => {
   var e
   const token = await ctx.token(1)
@@ -86,5 +86,5 @@ export default async (ctx, next) => {
     ctx.status = 201
   }
 
-  await ctx.render(post)
+  ctx.vmState(post)
 }

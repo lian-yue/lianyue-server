@@ -21,26 +21,6 @@ import Main from '../../../components/Main'
 const title = '评论'
 
 
-var componentServerMount
-if (__SERVER__) {
-  componentServerMount = async function componentServerMount(ctx, state) {
-    if (this.props.inline) {
-      if (state._id) {
-        const Comment = require('../../../../../models/comment');
-        const Comments = require('../../../../../viewModels/posts/comments/index');
-        await Comments(ctx, null, {})
-        state = ctx.getViewState()
-        state.path = this.context.getPath()
-        this.props.dispatch(actions.addCommentList(state))
-      }
-      return
-    }
-
-    state.path = this.context.getPath()
-    this.props.dispatch(actions.addCommentList(state))
-  }
-}
-
 
 @connect(state => ({
   commentList: state.get('commentList'),
@@ -62,24 +42,18 @@ export default class Comment extends Component {
     loading: false,
   }
 
-  componentServerMount = componentServerMount
-
 
   async fetch(props) {
     if (this.state.loading) {
       return false
     }
     this.setState({loading: true})
+    await props.dispatch(actions.addCommentList({path: this.context.getPath(props)}))
     try {
       var result = await this.context.fetch('/' + props.match.params.slug + '/comments', props.inline ? {} : props.location.search)
-      if (result.messages) {
-        props.dispatch(actions.setMessages(result, 'danger', 'popup'))
-        return
-      }
-      result.path = this.context.getPath(props)
-      props.dispatch(actions.addCommentList(result))
+      await props.dispatch(actions.addCommentList(result))
     } catch (e) {
-      props.dispatch(actions.setMessages([e, '请重试'], 'danger', 'popup'))
+      await props.dispatch(actions.setMessages(e, 'danger', 'popup'))
     } finally {
       this.setState({loading: false})
     }
@@ -92,22 +66,15 @@ export default class Comment extends Component {
     this.props.history.push(e.target.pathname + e.target.search)
   }
 
-
   componentWillMount() {
-    if (!__SERVER__) {
-      var props = this.props
-      var commentList = this.props.commentList
-      if (commentList.get('path') != this.context.getPath(props)) {
-        props.dispatch(actions.clearCommentList())
-        this.fetch(props)
-      }
+    if (__SERVER__) {
+      return
     }
+    this.componentWillReceiveProps(this.props)
   }
 
+
   componentDidMount() {
-    if (this.props.commentList.get('path') == this.context.getPath(this.props) && this.props.commentList.get('messages')) {
-      this.props.dispatch(actions.setMessages(this.props.commentList.toJS(), 'danger', 'popup'))
-    }
     var email = localStorage.getItem('email')
     if (email) {
       this.setState({email})
@@ -120,7 +87,7 @@ export default class Comment extends Component {
 
   componentWillReceiveProps(nextProps) {
     var props = this.props
-    if (this.state.loading || this.context.getPath(props) == this.context.getPath(nextProps)) {
+    if (this.state.loading || nextProps.commentList.get('path') == this.context.getPath(nextProps)) {
       return
     }
     if (!this.isMore) {
@@ -167,12 +134,7 @@ export default class Comment extends Component {
     this.setState({disabled: true});
 
     try {
-      var result = await this.context.fetch(this.props.commentList.getIn(['post', 'commentUri']) + '/create', {}, body)
-      if (result.messages) {
-        this.props.dispatch(actions.setMessages(result))
-        this.setState({disabled: false})
-        return
-      }
+      var result = await this.context.fetch(this.props.commentList.getIn(['post', 'commentUrl']) + '/create', {}, body)
       this.setState({parent: null, content: ''})
       this.props.dispatch(actions.addCommentList({results: [result]}))
       localStorage.setItem('email', body.email)
@@ -192,10 +154,6 @@ export default class Comment extends Component {
       e.preventDefault();
       try {
         var result = await this.context.fetch( '/' + this.props.match.params.slug + '/comments/' + comment.get('_id') +'/delete', {}, {})
-        if (result.messages) {
-          this.props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
-          return
-        }
         var results = this.props.commentList.get('results')
         var index = results.indexOf(comment)
         if (index != -1) {
@@ -213,10 +171,6 @@ export default class Comment extends Component {
       e.preventDefault();
       try {
         var result = await this.context.fetch( '/' + this.props.match.params.slug + '/comments/' + comment.get('_id') +'/restore', {}, {})
-        if (result.messages) {
-          this.props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
-          return
-        }
         var results = this.props.commentList.get('results')
         var index = results.indexOf(comment)
         if (index != -1) {
@@ -234,15 +188,20 @@ export default class Comment extends Component {
     var commentList = this.props.commentList
     var post = commentList.get('post')
     var result
-    if (commentList.get('messages')) {
+    if (!post || !post.get('_id')) {
       result = <section id="comment"></section>
       if (this.props.inline) {
         return result
       }
       return <Main
-        statistics={false}
+        status={this.state.loading ? 200 : 404}
         title={[title, site.title]}
-        breadcrumb={[title]} >
+        meta={[
+          {name: 'robots', content:'none'},
+        ]}
+        breadcrumb={[title]}
+        statistics={false}
+        >
         {result}
       </Main>
     }
@@ -353,7 +312,7 @@ export default class Comment extends Component {
     var postTitle = post.get('title')
     if (postTitle) {
       headers.breadcrumb.push({
-        to: post.get('uri'),
+        to: post.get('url'),
         name: postTitle.length > 16 ? postTitle.substr(0, 13) + '...' : postTitle.substr(0, 16)
       })
     }

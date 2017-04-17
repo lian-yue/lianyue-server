@@ -43,11 +43,7 @@ export default class Editor extends Component {
 
     try {
       var result = await this.context.fetch('/tags/' + (tag ?  tag : 'create'), {}, body)
-      if (result.messages) {
-        this.props.dispatch(actions.setMessages(result))
-        return
-      }
-      this.props.dispatch(actions.router.push(result.postUri + '?message=' + (tag ? 'update' : 'create') + '&r='+ Date.now()))
+      this.props.dispatch(actions.router.push(result.postUrl + '?message=' + (tag ? 'update' : 'create') + '&r='+ Date.now()))
     } catch (e) {
       this.props.dispatch(actions.setMessages(e))
     }
@@ -60,6 +56,9 @@ export default class Editor extends Component {
 
 
   async fetch(props) {
+    if (__SERVER__) {
+      return
+    }
     var tag = props.match.params.tag
     if (!tag) {
       return
@@ -67,14 +66,10 @@ export default class Editor extends Component {
     this.setState({disabled: true})
     try {
       var result = await this.context.fetch('/tags/' + tag)
-      if (result.messages) {
-        props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
-        return
-      }
       result.names = result.names.join(',')
       props.initialize(result)
     } catch (e) {
-      props.dispatch(actions.setMessages([e, '请重试'], 'danger', 'popup'))
+      await props.dispatch(actions.setMessages(e, 'danger', 'popup'))
     } finally {
       this.setState({disabled: false})
     }

@@ -34,7 +34,7 @@ const locales = [
   // 'zh-TW',
   ]
 
-exports.email = function(email)  {
+export function email(email)  {
   if (!validator.isEmail(email, {allow_utf8_local_part:false})) {
     return false;
   }
@@ -53,7 +53,7 @@ exports.email = function(email)  {
 
 
 
-exports.mobilePhone = function(phone)  {
+export function mobilePhone(phone)  {
   if (!phone || typeof phone != 'string') {
     return false;
   }

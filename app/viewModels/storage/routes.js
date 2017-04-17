@@ -1,30 +1,33 @@
-import koaRouter from 'koa-router'
-import koaBody from 'koa-body'
+import Router from 'viewModels/router'
 
-import body from '../middlewares/body'
-import bodyMultipart from '../middlewares/bodyMultipart'
-import token from '../middlewares/token'
-import admin from '../middlewares/admin'
+import body from 'viewModels/middlewares/body'
+import bodyMultipart from 'viewModels/middlewares/bodyMultipart'
+import token from 'viewModels/middlewares/token'
+import admin from 'viewModels/middlewares/admin'
 
 import id from './middlewares/id'
 
 
-export default function router() {
-  const router = koaRouter();
+import index from './index'
+import read from './read'
+import create from './create'
+import del from './delete'
+import restore from './restore'
+
+const router = new Router;
 
 
-  router.get('/', admin, require('./index'));
-  router.get('/:id', admin, id, require('./read'));
+router.get('storage/index', '/', admin, index);
+router.get('storage/read', '/:id', admin, id, read);
 
-  router.use(token)
-  router.use(admin)
+router.use(token)
+router.use(admin)
 
-  router.post('/create', bodyMultipart, require('./create'));
+router.post('/create', bodyMultipart, create);
 
-  router.del('/:id', id, require('./delete'));
-  router.post('/:id/delete', id, require('./delete'));
+router.del('/:id', id, del);
+router.post('/:id/delete', id, del);
 
-  router.post('/:id/restore', id, require('./restore'));
+router.post('/:id/restore', id, restore);
 
-  return router
-}
+export default router

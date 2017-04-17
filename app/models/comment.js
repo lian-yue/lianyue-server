@@ -6,8 +6,7 @@ import model from './model'
 
 import Post from './post'
 
-import validator from './validator'
-
+import * as Validator from './validator'
 
 
 
@@ -46,7 +45,7 @@ var schema = new Schema({
     validate: [
       {
         validator: function(email) {
-          email = validator.email(email);
+          email = Validator.email(email);
           if (!email) {
             return false;
           }
@@ -79,7 +78,7 @@ var schema = new Schema({
     validate: [
       {
         validator: async function(id, cl) {
-          var comment = await module.exports.findById(id).exec()
+          var comment = await Comment.findById(id).exec()
           cl(comment && !comment.get('deletedAt'))
         },
         message: '不允许回复该评论 ({PATH})',
@@ -155,4 +154,6 @@ schema.pre('save', async function() {
 })
 
 
-module.exports = model('Comment', schema);
+const Comment = model('Comment', schema);
+
+export default Comment

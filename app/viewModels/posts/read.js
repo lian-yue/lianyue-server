@@ -1,4 +1,4 @@
-import Post from 'models/post'
+import { Post } from 'models'
 export default async function(ctx) {
   var post = ctx.state.post
 
@@ -20,5 +20,5 @@ export default async function(ctx) {
   post = post.toJSON()
   post.prev = await Post.findOne({_id:{$lt: post._id}, createdAt:{$lte: post.createdAt}, page: {$exists: !!post.page}, deletedAt: {$exists: false}}, {content: 0, excerpt: 0}, {sort: {createdAt:-1}}).exec()
   post.next = await Post.findOne({_id:{$gt: post._id}, createdAt:{$gte: post.createdAt}, page: {$exists: !!post.page}, deletedAt: {$exists: false}}, {content: 0, excerpt: 0}, {sort: {createdAt:1}}).exec()
-  await ctx.render('posts/read', post);
+  ctx.vmState(post);
 }

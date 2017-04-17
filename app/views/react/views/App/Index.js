@@ -1,4 +1,4 @@
-import React, {Component, PropTypes, Children} from 'react';
+import React, {Component, PropTypes} from 'react';
 import { connect } from 'react-redux'
 import { Link, Route, Switch } from 'react-router-dom'
 
@@ -8,7 +8,28 @@ import site from 'config/site'
 
 import actions from '../../actions'
 
-import Messages from '../../components/Messages'
+import PopupMessages from './PopupMessages'
+
+
+
+
+
+function toJSONObject(state) {
+  for (var key in state) {
+    if (!state[key]) {
+      continue
+    }
+    if (typeof state[key] != 'object') {
+      continue
+    }
+    if (typeof state[key].toJSON == 'function') {
+      state[key] = state[key].toJSON()
+    } else {
+      state[key] = toJSONObject(state[key])
+    }
+  }
+  return state
+}
 
 
 function asyncComponent(cl, ...paths) {
@@ -20,11 +41,13 @@ function asyncComponent(cl, ...paths) {
 
     async asyncComponent() {
       RenderComponent = await cl()
+      RenderComponent = RenderComponent.default || RenderComponent
     }
 
     async componentDidMount() {
       if (!RenderComponent) {
         RenderComponent = await cl()
+        RenderComponent = RenderComponent.default || RenderComponent
         this.setState({component: true})
       }
     }
@@ -55,28 +78,17 @@ function asyncComponent(cl, ...paths) {
 }
 
 
-const ErrorsNotFoundComponent = asyncComponent(() => System.import('../Errors/NotFound'));
-const AdminComponent = asyncComponent(() => System.import('../Admin'));
+const ErrorsNotFoundComponent = asyncComponent(() => import('../Errors/NotFound'));
+const AdminComponent = asyncComponent(() => import('../Admin'));
 
-const PostsIndexComponent = asyncComponent(() => System.import('../Posts/Index'));
-const PostsReadComponent = asyncComponent(() => System.import('../Posts/Read'));
-const PostsEditorComponent = asyncComponent(() => System.import('../Posts/Editor'), true);
-const PostsCommentComponent = asyncComponent(() => System.import('../Posts/Comment'));
-const CommentComponent = asyncComponent(() => System.import('../Comment'), true);
+const PostsIndexComponent = asyncComponent(() => import('../Posts/Index'));
+const PostsReadComponent = asyncComponent(() => import('../Posts/Read'));
+const PostsEditorComponent = asyncComponent(() => import('../Posts/Editor'), true);
+const PostsCommentComponent = asyncComponent(() => import('../Posts/Comment'));
+const CommentComponent = asyncComponent(() => import('../Comment'), true);
 
-const TagsIndexComponent = asyncComponent(() => System.import('../Tags/Index'));
-const TagsEditorComponent = asyncComponent(() => System.import('../Tags/Editor'));
-
-var componentServerMount
-if (__SERVER__) {
-  componentServerMount = async function(ctx, state) {
-    if (!ctx) {
-      return
-    }
-    await this.props.dispatch(actions.fetchToken(0, ctx));
-    await this.props.dispatch(actions.setProtocol(ctx.protocol));
-  }
-}
+const TagsIndexComponent = asyncComponent(() => import('../Tags/Index'));
+const TagsEditorComponent = asyncComponent(() => import('../Tags/Editor'));
 
 @connect(state => ({
   messages: state.get('messages'),
@@ -100,18 +112,16 @@ export default class App extends Component{
 
   getChildContext() {
     return {
-      fetch: this.fetch,
+      fetch: this.fetchUrl,
       toUrl: this.toUrl,
       getPath: this.getPath,
       onChange: this.onChange,
     }
   }
 
-  componentServerMount = componentServerMount
-
   toUrl = (pathname, query) => {
     pathname = pathname || '/'
-    var url = this.props.protocol + site.uri + (pathname == '/' ? pathname : pathname.replace(/\/$/, ''))
+    var url = this.props.protocol + site.url + (pathname == '/' ? pathname : pathname.replace(/\/$/, ''))
     if (!query) {
 
     } else if (typeof query == 'object') {
@@ -131,17 +141,32 @@ export default class App extends Component{
     return location.pathname + location.search
   }
 
-  fetch = async (url, query, body, headers) => {
-    headers = headers || {}
+
+  fetchUrl = async (path, query, body) => {
     query = query || {}
     if (typeof query != 'object') {
       query = queryString.parse(query)
     }
+
+    if (__SERVER__) {
+      var ctx = this.props.ctx
+      try {
+        return await ctx.viewModel(body ? 'POST' : 'GET', path, query, body).then(state => toJSONObject(state))
+      } catch (err) {
+        ctx.app.emit('error', err, ctx);
+        throw err
+      }
+    }
+
     var opt = {}
+    opt.headers = {}
 
     if (body && typeof body == 'object') {
       if (!this.props.token.get("_id")) {
-        await this.props.dispatch(actions.fetchToken(1));
+        var token = await fetch('/token?view=json&create=1', {
+          credentials: 'same-origin'
+        }).then(response => response.json())
+        await this.props.dispatch(actions.setToken(token));
       }
       body = queryString.stringify(Object.assign({}, body, {view: 'json', _token:this.props.token.get("_id")}))
     }
@@ -152,22 +177,29 @@ export default class App extends Component{
 
     if (body) {
       opt.method = 'POST'
-      headers['Content-Type'] = headers['Content-Type'] || "application/x-www-form-urlencoded"
+      opt.headers['Content-Type'] = "application/x-www-form-urlencoded"
     }
 
-    opt.headers = headers
     if (body) {
       opt.body = body
     }
     opt.credentials = opt.credentials || 'same-origin'
     opt.timeout = 10000
 
-    return await fetch(url + (query ? '?' + query : ''), opt).then((response) => {
+    var response = await fetch(path + (query ? '?' + query : ''), opt).then((response) => {
       if (response.status == 204) {
         return {}
       }
       return response.json(true)
     })
+    if (response.messages) {
+      var err = new Error
+      for (var key in response) {
+        err[key] = response[key]
+      }
+      throw err
+    }
+    return response
   }
 
 
@@ -256,15 +288,36 @@ export default class App extends Component{
     }
   }
 
+  async fetch(props) {
+    if (__SERVER__) {
+      var ctx = props.ctx
+      var token = await ctx.token();
+      if (token) {
+        await props.dispatch(actions.setToken(token.toJSON()));
+      }
+      await props.dispatch(actions.setProtocol(ctx.protocol));
+    }
+  }
+
   componentDidMount() {
     this.setState({
       github: '//github.com/lian-yue',
       email: 'mailto:' + site.email,
-      feed: '//list.qq.com/cgi-bin/qf_invite?id=d6c226834b15d2103bb6920ba251390e2adf75fd96a25230',
+      feed: '//www.lianyue.org?view=json',
     })
     window.addEventListener('resize', this.onResize)
     this.onResize()
   }
+
+  componentDidUpdate(props) {
+    if (this.props.router.getIn(['location', 'key']) != props.router.getIn(['location', 'key']) && document.body.className) {
+      setTimeout(function() {
+        document.body.className = document.body.className.replace(/\s*header-open\s*/, '')
+      }, 30)
+    }
+  }
+
+
 
   onResize() {
     const html = document.documentElement
@@ -281,29 +334,6 @@ export default class App extends Component{
     container.style.minHeight = minHeight + 'px'
   }
 
-
-  componentDidUpdate(props) {
-    const popup = this.props.messages.get('popup')
-    if(popup && !popup.get('close')) {
-      if (this.props.router.getIn(['location', 'key']) != props.router.getIn(['location', 'key'])) {
-        this.props.dispatch(actions.closeMessages('popup'))
-      } else {
-        setTimeout(() => {
-          this.props.dispatch(actions.closeMessages('popup'))
-        }, 3000);
-      }
-    }
-
-    if (this.props.router.getIn(['location', 'key']) != props.router.getIn(['location', 'key']) && document.body.className) {
-      setTimeout(function() {
-        document.body.className = document.body.className.replace(/\s*header-open\s*/, '')
-      }, 30)
-    }
-  }
-
-  errorClose = () => {
-    this.props.dispatch(actions.closeMessages('popup'))
-  }
 
   onHeaderBackdrop(e) {
     e.preventDefault()
@@ -367,14 +397,12 @@ export default class App extends Component{
       </div>
       <footer id="footer" role="contentinfo">
         <div className="info">
-          <span className="copyright">Copyright&nbsp;&#169;&nbsp;2009-2016&nbsp;<a href={site.uri}>{site.title}</a>&nbsp;All Rights Reserved!</span>
+          <span className="copyright">Copyright&nbsp;&#169;&nbsp;2009-2016&nbsp;<a href={site.url}>{site.title}</a>&nbsp;All Rights Reserved!</span>
           <span className="powered">Powered by Koa &amp; <a href="//www.lianyue.org" target="_blank">lianyue</a></span>
         </div>
       </footer>
       <div id="header-backdrop" onClick={this.onHeaderBackdrop}></div>
-      <div id="popup-messages" onDoubleClick={this.errorClose}>
-        <Messages name="popup" />
-      </div>
+      <PopupMessages />
     </div>
   }
 }

@@ -17,16 +17,6 @@ const title = '标签列表'
 
 
 
-var componentServerMount
-if (__SERVER__) {
-  componentServerMount = async function componentServerMount(ctx, state) {
-    state.path = this.context.getPath()
-    this.props.dispatch(actions.addTagList(state))
-  }
-}
-
-
-
 @connect(state => ({
   tagList: state.get('tagList'),
   router: state.get('router'),
@@ -43,27 +33,16 @@ export default class Index extends Component {
     loading: false,
   }
 
-
-  componentServerMount = componentServerMount
-
   componentWillMount() {
-    if (!__SERVER__) {
-      if (this.props.tagList.get('path') != this.context.getPath(this.props)) {
-        this.props.dispatch(actions.clearTagList())
-        this.fetch(this.props)
-      }
+    if (__SERVER__) {
+      return
     }
-  }
-
-  componentDidMount() {
-    if (this.props.tagList.get('path') == this.context.getPath(this.props) && this.props.tagList.get('messages')) {
-      this.props.dispatch(actions.setMessages(this.props.tagList.toJS(), 'danger', 'popup'))
-    }
+    this.componentWillReceiveProps(this.props)
   }
 
   componentWillReceiveProps(nextProps) {
     var props = this.props
-    if (this.state.loading || this.context.getPath(props) == this.context.getPath(nextProps)) {
+    if (this.state.loading || nextProps.tagList.get('path') == this.context.getPath(nextProps)) {
       return
     }
     if (!this.isMore) {
@@ -81,11 +60,12 @@ export default class Index extends Component {
       return false
     }
     this.setState({loading: true})
+    await props.dispatch(actions.addTagList({path: this.context.getPath(props)}))
     try {
       var result = await this.context.fetch(props.location.pathname, props.location.search)
-      props.dispatch(actions.addTagList(result))
+      await props.dispatch(actions.addTagList(result))
     } catch (e) {
-      props.dispatch(actions.setMessages([e, '请重试'], 'danger', 'popup'))
+      await props.dispatch(actions.setMessages(e, 'danger', 'popup'))
     } finally {
       this.setState({loading: false})
     }
@@ -189,7 +169,7 @@ export default class Index extends Component {
           <ul className="tags-list">
             {tagList.get('results').map((tag, key) => {
               return (
-                <li key={tag.get('_id')}><Link to={tag.get('postUri')} rel="tag" className="btn btn-outline-primary" title={tag.getIn(['names', 0])}>{tag.getIn(['names', 0]) + '('+ tag.get('count') +')'}</Link></li>
+                <li key={tag.get('_id')}><Link to={tag.get('postUrl')} rel="tag" className="btn btn-outline-primary" title={tag.getIn(['names', 0])}>{tag.getIn(['names', 0]) + '('+ tag.get('count') +')'}</Link></li>
               )
             })}
           </ul>

@@ -1,13 +1,16 @@
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-
-const mmmagic = require('mmmagic');
-const configConfig = require('config/storage');
+import fs from 'fs'
+import path from 'path'
+import crypto from 'crypto'
+import mmmagic from 'mmmagic'
 
 import { Schema } from 'mongoose'
 
+import config from 'config/storage'
+
+
 import model from './model'
+
+
 
 var schema = new Schema({
   createdAt: {
@@ -36,7 +39,7 @@ var schema = new Schema({
     validate: [
       {
         validator: function(type) {
-          return !!configConfig.types[type];
+          return !!config.types[type];
         },
         message: '文件类型不允许 ({PATH})',
       },
@@ -59,7 +62,7 @@ var schema = new Schema({
     type: Schema.Types.Integer,
     index: true,
     default: 0,
-    max: [configConfig.size, '文件不能大于 '+ (configConfig.size / 1024 /1024) +'MB  ({PATH})']
+    max: [config.size, '文件不能大于 '+ (config.size / 1024 /1024) +'MB  ({PATH})']
   },
 
   md5: {
@@ -92,13 +95,13 @@ var schema = new Schema({
 
 
 
-schema.methods.uri = function(width = 0, height = 0, crop = 0, enlarge = 0, extension = 'jpg') {
-  return configConfig.uri + this.get('path') + '!' + ([width, height, crop, enlarge].join('_')) + '.' + extension;
+schema.methods.url = function(width = 0, height = 0, crop = 0, enlarge = 0, extension = 'jpg') {
+  return config.url + this.get('path') + '!' + ([width, height, crop, enlarge].join('_')) + '.' + extension;
 }
 
 
 schema.virtual('original').get(function() {
-  return configConfig.uri + this.get('path');
+  return config.url + this.get('path');
 });
 
 
@@ -106,7 +109,7 @@ schema.virtual('thumbnail').get(function() {
   if (['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'].indexOf(this.get('type')) == -1) {
     return undefined;
   }
-  return this.uri(200, 200, 0, 0, 'jpg');
+  return this.url(200, 200, 0, 0, 'jpg');
 });
 
 
@@ -175,7 +178,7 @@ schema.pre('validate', async function() {
 
 
   // 文件类型
-  var type = await module.exports.type(originalPath)
+  var type = await Storage.type(originalPath)
   this.set('type', type);
 
 
@@ -265,8 +268,8 @@ schema.pre('validate', async function() {
   // 新目录
   var names = this.get('name').split('.');
   var extension = names.length > 1 ? names[names.length - 1].toLowerCase() : '';
-  if (configConfig.types[type] && configConfig.types[type].indexOf(extension) == -1) {
-    extension = configConfig.types[type][0];
+  if (config.types[type] && config.types[type].indexOf(extension) == -1) {
+    extension = config.types[type][0];
   }
 
   var date = new Date();
@@ -298,7 +301,7 @@ schema.pre('save', async function() {
     return;
   }
   var originalPath = this.$_originalPath
-  var newPath = configConfig.dir + this.get('path')
+  var newPath = config.dir + this.get('path')
   await mkdirPromise(path.dirname(newPath));
 
 
@@ -356,4 +359,6 @@ schema.statics.type = function(path) {
 
 
 
-module.exports = model('Storage', schema);
+const Storage = model('Storage', schema);
+
+export default Storage

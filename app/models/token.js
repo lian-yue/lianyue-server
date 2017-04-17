@@ -60,4 +60,4 @@ schema.set('toJSON', {
 });
 
 
-module.exports = model('Token', schema);
+export default model('Token', schema);

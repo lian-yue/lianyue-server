@@ -40,7 +40,7 @@ var schema = new Schema({
       },
       {
         validator: async function(slug, cb) {
-          var post = await module.exports.findOne({slug}).read('primary').exec();
+          var post = await Post.findOne({slug}).read('primary').exec();
           cb(!post || post.get('_id').equals(this.get('_id')));
         },
         message: 'Slug 已存在 ({PATH})',
@@ -192,7 +192,7 @@ schema.pre('save', async function() {
 
   // 摘要
   if (this.isModified('content') && !this.isModified('excerpt')) {
-    this.set('excerpt', this.getMarkdown().getExcerpt(this.get('uri')))
+    this.set('excerpt', this.getMarkdown().getExcerpt(this.get('url')))
   }
 
   // 描述
@@ -232,14 +232,16 @@ schema.set('toJSON', {
   },
 });
 
-schema.virtual('uri').get(function() {
+schema.virtual('url').get(function() {
   return '/' + encodeURIComponent(this.get('slug') || this.get('_id'));
 });
 
-schema.virtual('commentUri').get(function() {
+schema.virtual('commentUrl').get(function() {
   return '/' + encodeURIComponent(this.get('slug') || this.get('_id')) + '/comments';
 });
 
 
 
-module.exports = model('Post', schema);
+const Post = model('Post', schema);
+
+export default Post

@@ -1,10 +1,13 @@
 #!/usr/bin/env node
-const debug = require('debug')('demo:server');
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+if (process.env.NODE_ENV == 'development' && !process.env.DEBUG) {
+  process.env.DEBUG = '*,-babel,-koa-send,-mquery';
+}
+
+const debug = require('debug')('server');
 const http  = require('http');
 const port  = normalizePort(process.env.PORT || '3000');
 const host  = process.env.HOST || '0.0.0.0'
-
-process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
 
 var server
@@ -12,12 +15,12 @@ if (process.env.NODE_ENV == 'development') {
   const webpack = require('webpack')
   const MemoryFileSystem  = require('memory-fs')
 
+
   const config = require('../webpack.config.server')
 
   const fs = new MemoryFileSystem()
-  const compiler = webpack(config)
 
-  // compiler.outputFileSystem = fs
+  const compiler = webpack(config)
   compiler.watch({
     aggregateTimeout: 1000,
     poll: true,
@@ -28,7 +31,6 @@ if (process.env.NODE_ENV == 'development') {
     stats = stats.toJson()
     stats.errors.forEach(err => console.error(err))
     stats.warnings.forEach(err => console.warn(err))
-
     if (!server) {
       server = app()
     }
@@ -38,13 +40,13 @@ if (process.env.NODE_ENV == 'development') {
 }
 
 
+
+
 function app() {
   if (process.env.NODE_ENV == 'development') {
-    process.env.DEBUG = '*';
     let koaWebpack = require('koa-webpack');
     let configs = require('../webpack.config.client');
-
-    var app = require('../dev')()
+    var app = require('../dev').default()
     configs.forEach(function(config) {
       app.middleware.unshift(koaWebpack({
         config,
@@ -57,7 +59,7 @@ function app() {
       }))
     })
   } else {
-    var app = require('../dist')()
+    var app = require('../dist').default()
   }
 
   // proxy

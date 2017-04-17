@@ -10,5 +10,5 @@ export default async function(ctx) {
   await storage.save();
 
   ctx.status = 204;
-  await ctx.render(storage);
+  ctx.vmState(storage);
 }

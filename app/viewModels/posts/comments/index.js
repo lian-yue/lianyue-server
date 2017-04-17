@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import Comment from '../../../models/comment'
+import { Comment } from 'models'
 
 const ObjectId = Types.ObjectId
 
@@ -50,5 +50,5 @@ export default async function(ctx, next, ctxQuery) {
   post = post.toJSON()
   delete post.content
   delete post.htmlContent
-  await ctx.render('post/comments', {results, more, post});
+  ctx.vmState({results, more, post});
 }

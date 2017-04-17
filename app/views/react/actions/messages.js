@@ -4,16 +4,24 @@ export const MESSAGES_CLOSE = 'MESSAGES_CLOSE'
 
 
 export function setMessages(action, type, name) {
-  if (action instanceof Error) {
+  if (typeof action == 'object') {
+    action = toObject(action)
+    if (action.errors) {
+      action.messages =  action.errors
+      delete action.errors
+    }
+    if (action.messages) {
+      delete action.message
+    }
+    if (action.message) {
+      action = [action]
+    }
+  } else {
     action = [action]
   }
 
-  if (!(action instanceof Object)) {
-    action = [{message: action}]
-  }
-
-  if (action instanceof Array) {
-    action = {messages:action}
+  if (Array.isArray(action)) {
+    action = {messages: action}
   }
 
   action._type = type ||  action.type
@@ -25,4 +33,26 @@ export function setMessages(action, type, name) {
 
 export function closeMessages(name) {
   return {name, type: MESSAGES_CLOSE};
+}
+
+
+
+
+function toObject(data) {
+  if (data instanceof Error) {
+    var error = data
+    data = {}
+    Object.keys(error).forEach(function(key) {
+      data[key] = error[key]
+    })
+    data.message = error.message
+  }
+
+  for (var key in data) {
+    if (data[key] && typeof data[key] == 'object') {
+      data[key] = toObject(data[key])
+    }
+  }
+
+  return data
 }

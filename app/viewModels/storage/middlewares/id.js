@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import Storage from '../../../models/storage'
+import { Storage } from 'models'
 const ObjectId = Types.ObjectId
 export default async (ctx, next) => {
   var e;

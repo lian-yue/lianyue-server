@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import Comment from '../../../../models/comment'
+import { Comment } from 'models'
 
 const ObjectId = Types.ObjectId
 

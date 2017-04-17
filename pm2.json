@@ -1,7 +1,7 @@
 {
   "apps": [{
     "name": "lianyue-server",
-    "script": "dist",
+    "script": "bin/www",
     "exec_mode": "cluster",
     "instances": 0,
     "max_memory_restart": "1G",

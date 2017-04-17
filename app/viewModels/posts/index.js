@@ -1,8 +1,7 @@
 import moment from 'moment'
 import { Types } from 'mongoose'
 
-import Post from 'models/post'
-import Tag from 'models/tag'
+import { Post, Tag } from 'models'
 
 
 export default async function(ctx) {
@@ -95,5 +94,5 @@ export default async function(ctx) {
     ctx.status = 404
   }
 
-  await ctx.render('posts/index', {tag, results, more})
+  ctx.vmState({tag, results, more})
 }

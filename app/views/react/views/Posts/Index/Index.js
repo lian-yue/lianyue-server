@@ -20,19 +20,6 @@ import View from '../../../components/Markdown/View'
 
 
 
-var componentServerMount
-if (__SERVER__) {
-  componentServerMount = async function componentServerMount(ctx, state) {
-    state.path = this.context.getPath()
-    state.tag = state.tag || null
-    this.props.dispatch(actions.addPostList(state))
-    if (ctx.request.path == '/' && !ctx.request.search && !this.props.links) {
-      await this.props.dispatch(actions.fetchLinks());
-    }
-  }
-}
-
-
 @connect(state => ({
   postList: state.get('postList'),
   router: state.get('router'),
@@ -51,27 +38,29 @@ export default class Index extends Component {
     loading: false,
   }
 
-  componentServerMount = componentServerMount
-
 
   async fetch(props) {
     if (this.state.loading) {
       return false
     }
     this.setState({loading: true})
+    await props.dispatch(actions.addPostList({path: this.context.getPath(props)}))
     try {
       var result = await this.context.fetch(props.location.pathname, props.location.search)
-      if (result.messages) {
-        props.dispatch(actions.setMessages(result, 'danger', 'popup'))
-        return
-      }
-      result.path = this.context.getPath(props)
       result.tag = result.tag || null
-      props.dispatch(actions.addPostList(result))
+      await props.dispatch(actions.addPostList(result))
     } catch (e) {
-      props.dispatch(actions.setMessages([e, '请重试'], 'danger', 'popup'))
+      await props.dispatch(actions.setMessages(e, 'danger', 'popup'))
     } finally {
       this.setState({loading: false})
+    }
+
+    if (props.location.pathname == '/' && !props.location.search && props.links === false) {
+      try {
+        var result = await this.context.fetch('/links', {record:''})
+        await props.dispatch(actions.setLinks(result.excerpt))
+      } catch (e) {
+      }
     }
   }
 
@@ -83,30 +72,19 @@ export default class Index extends Component {
   }
 
 
+
   componentWillMount() {
-    if (!__SERVER__) {
-      if (this.props.postList.get('path') != this.context.getPath(this.props)) {
-        this.props.dispatch(actions.clearPostList())
-        this.fetch(this.props)
-      }
-      if (this.props.location.pathname == '/' && !this.props.location.search && this.props.links === false) {
-        this.props.dispatch(actions.fetchLinks());
-      }
+    if (__SERVER__) {
+      return
     }
+    this.componentWillReceiveProps(this.props)
   }
 
-
-
-  componentDidMount() {
-    if (this.props.postList.get('path') == this.context.getPath(this.props) && this.props.postList.get('messages')) {
-      this.props.dispatch(actions.setMessages(this.props.postList.toJS(), 'danger', 'popup'))
-    }
-  }
 
 
   componentWillReceiveProps(nextProps) {
     var props = this.props
-    if (this.state.loading || this.context.getPath(props) == this.context.getPath(nextProps)) {
+    if (this.state.loading || nextProps.postList.get('path') == this.context.getPath(nextProps)) {
       return
     }
     if (!this.isMore) {
@@ -136,11 +114,7 @@ export default class Index extends Component {
     var tag = this.props.postList.get('tag')
     var state = tag.get('state') == -1 ? 0 : -1
     try {
-      var result = await this.context.fetch(tag.get('uri') +'/state', {}, {state})
-      if (result.messages) {
-        this.props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
-        return
-      }
+      var result = await this.context.fetch(tag.get('url') +'/state', {}, {state})
       tag = tag.set('state', state)
       this.props.dispatch(actions.setPostList({tag}))
     } catch (e) {
@@ -245,7 +219,7 @@ export default class Index extends Component {
     if (search) {
       h1 = <h1 className="title">搜索<strong>{search}</strong>的结果</h1>
     } else if (tag) {
-      h1 = <h1 className="title">标签<Link to={'/tag-' + tag.get('postUri')} title={tag.get('names').get(0)} rel="tag">{tag.get('names').get(0)}</Link>下的文章</h1>
+      h1 = <h1 className="title">标签<Link to={'/tag-' + tag.get('postUrl')} title={tag.get('names').get(0)} rel="tag">{tag.get('names').get(0)}</Link>下的文章</h1>
     } else if (query.isPage) {
       h1 = <h1 className="title">页面列表</h1>
     } else {
@@ -261,7 +235,7 @@ export default class Index extends Component {
           <li className="nav-item">{locationQuery.deleted ? <Link to="/" className="nav-link">已发布</Link> : <Link to="/?deleted=1" className="nav-link">回收站</Link>}</li>
           <li className="nav-item">{query.isPage ? <Link to='/' className="nav-link">文章列表</Link> :  <Link to="/?isPage=1" className="nav-link">页面列表</Link>}</li>
           <li className="nav-item"><Link to="/create" className="nav-link">创建文章</Link></li>
-          {tag && tag.get('state') != -1 ? <li className="nav-item"><Link to={tag.get('uri') + '/update'} className="nav-link">编辑标签</Link></li> : ''}
+          {tag && tag.get('state') != -1 ? <li className="nav-item"><Link to={tag.get('url') + '/update'} className="nav-link">编辑标签</Link></li> : ''}
           {tag ? (<li className="nav-item"><a href="#" onClick={this.onTagState} className="nav-link">{tag.get('state') == -1 ? '启用标签' : '禁用标签'}</a></li>) : ''}
           <li className="nav-item"><Link to="/comments" className="nav-link">评论管理</Link></li>
         </ul>
@@ -280,17 +254,17 @@ export default class Index extends Component {
               createdAt = moment(createdAt).format()
             }
             var content = post.get('excerpt') || ''
-            content  += '<p><a href="'+ post.get('uri') +'" class="more-link">继续阅读 »</a></p>'
+            content  += '<p><a href="'+ post.get('url') +'" class="more-link">继续阅读 »</a></p>'
             return (
               <article key={key} className="post entry hentry"  itemScope itemType="http://schema.org/BlogPosting">
                 <header className="entry-header">
                   <h2 className="entry-title">
-                    <Link to={post.get('uri')} rel="bookmark" title={post.get('title')} itemProp="headline">{post.get('title')}</Link>
+                    <Link to={post.get('url')} rel="bookmark" title={post.get('title')} itemProp="headline">{post.get('title')}</Link>
                   </h2>
                   <div className="entry-meta">
                     <time className="entry-date" itemProp="datePublished" dateTime={createdAt} title={createdAt}>{createdAt ? moment(post.get('createdAt')).fromNow() : ''}</time>
                     <span className="comments-link">
-                      <Link to={post.get('uri') + "#comments"} rel="nofollow">{(post.get('meta').get('comments') || 0) + '条评论'}</Link>
+                      <Link to={post.get('url') + "#comments"} rel="nofollow">{(post.get('meta').get('comments') || 0) + '条评论'}</Link>
                     </span>
                   </div>
                 </header>

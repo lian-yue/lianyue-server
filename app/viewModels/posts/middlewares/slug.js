@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import Post from '../../../models/post'
+import { Post } from 'models'
 const ObjectId = Types.ObjectId
 export default async (ctx, next) => {
   var id

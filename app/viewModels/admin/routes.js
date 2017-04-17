@@ -1,17 +1,15 @@
-import koaRouter from 'koa-router'
+import Router from 'viewModels/router'
 
-import body from '../middlewares/body'
-import token from '../middlewares/token'
+import body from 'viewModels/middlewares/body'
+import token from 'viewModels/middlewares/token'
 
-export default function router() {
-  const router = koaRouter();
+import index from './index'
 
-  router.get('/', require('./getIndex'));
+const router = new Router;
 
-  router.use(body);
-  router.use(token);
+router.use(body);
+router.use(token);
 
-  router.post('/', require('./index'));
+router.post('/', index);
 
-  return router;
-}
+export default router

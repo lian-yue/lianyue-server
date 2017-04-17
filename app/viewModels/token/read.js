@@ -4,5 +4,5 @@ export default async function(ctx) {
     token = {};
   }
   ctx.set('Cache-Control', 'no-cache,must-revalidate,max-age=0');
-  await ctx.render(token);
+  ctx.vmState(token);
 }

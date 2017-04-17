@@ -24,6 +24,9 @@ function addHeaders(state) {
   if (!__SERVER__) {
     var head = document.querySelector('head');
     state.forEach(function(value, name) {
+      if (name == 'status') {
+        return
+      }
       if (name == 'title') {
         document.title = value.join(' - ');
         return

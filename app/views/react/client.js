@@ -30,7 +30,9 @@ const element = document.getElementById('app')
 
 var isReactTreeWalker
 export async function render() {
-  const App = require('./views/App');
+
+
+  const App = require('./views/App').default;
 
   var app = <Provider store={store}>
     <Router history={history}>
@@ -132,7 +134,7 @@ async function reactTreeWalker(element, context = {}) {
 
       if (instance.componentWillMount) {
         // Make the setState synchronous.
-        instance.componentWillMount();
+        instance.componentWillMount()
       }
 
 

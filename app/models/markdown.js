@@ -2,7 +2,7 @@ import MarkdownX from 'markdown-x'
 import MarkdownXNode from 'markdown-x/dist/node'
 import hljs from 'highlight.js'
 
-;(function(){
+;(function() {
   var blockcode = MarkdownX.getRule('md_blockcode')
   if (!blockcode.oldPrepare) {
     blockcode.oldPrepare = blockcode.prepare
@@ -39,11 +39,11 @@ MarkdownX.prototype.toHtml = function() {
   return document.toHtml()
 }
 
-MarkdownX.prototype.getExcerpt = function(uri) {
+MarkdownX.prototype.getExcerpt = function(url) {
   function hrefAttribute(node) {
     var href = node.getAttribute('href')
     if (node.nodeName == 'a' && href && typeof href == 'string' && href.charAt(0) == '#') {
-      node.setAttribute('href', uri + href)
+      node.setAttribute('href', url + href)
     }
     for (var i = 0; i < node.childNodes.length; i++) {
       hrefAttribute(node.childNodes[i])
@@ -173,7 +173,7 @@ for (let name in MarkdownXPost.rules) {
 
 
 // 组建
-module.exports = function (value, options) {
+export default function (value, options) {
   options = options || {}
   if (options.modelName && options.modelName.toLocaleLowerCase() == 'post') {
     return new MarkdownXPost(value, options)

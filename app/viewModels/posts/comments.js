@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import Comment from 'models/comment'
+import { Comment } from 'models'
 
 const ObjectId = Types.ObjectId
 
@@ -46,5 +46,5 @@ export default async function(ctx) {
     results.pop();
   }
 
-  await ctx.render('comments', {results, more});
+  ctx.vmState({results, more});
 }

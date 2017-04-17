@@ -1,6 +1,6 @@
 module.exports = {
   dir: __dirname + '/../../storage/',
-  uri: '//localhost:4000',
+  url: '//localhost:4000',
   types: {
     'image/jpeg': ['jpg'],
     'image/png': ['png'],

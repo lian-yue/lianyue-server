@@ -1,24 +1,13 @@
 import server from './server'
 
-if(module.hot) {
-  module.hot.accept();
-}
 
-export default async function(ctx, relPath, state) {
-  if (typeof ctx.body == 'string' || ctx.body) {
-    return
-  }
-  ctx.body = ''
-
-  if (!relPath || relPath === true || (ctx.method != 'GET' && ctx.method != 'HEAD')) {
-    ctx.set("X-Content-Type-Options", 'nosniff');
-    ctx.body = JSON.stringify(state);
+export default async function(ctx, next) {
+  if (['GET', 'HEAD'].indexOf(ctx.method) == -1 || (ctx.query.view && ctx.query.view != 'react')) {
+    await next()
     return
   }
 
-  toJSONObject(state)
-
-  var {redirect, body} = await server(state, ctx);
+  var {redirect, body, state} = await server(ctx);
 
   if (redirect) {
     ctx.redirect(redirect.pathname + redirect.search)
@@ -31,23 +20,12 @@ export default async function(ctx, relPath, state) {
     throw e;
   }
 
+  ctx.status = state.get('headers').get('status') || 200
   ctx.type = 'text/html'
   ctx.body = body
 }
 
 
-function toJSONObject(state) {
-  for (var key in state) {
-    if (!state[key]) {
-      continue
-    }
-    if (typeof state[key] != 'object') {
-      continue
-    }
-    if (typeof state[key].toJSON == 'function') {
-      state[key] = state[key].toJSON()
-    } else {
-      toJSONObject(state[key])
-    }
-  }
+if(module.hot) {
+  module.hot.accept();
 }

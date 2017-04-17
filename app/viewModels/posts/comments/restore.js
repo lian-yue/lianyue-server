@@ -9,5 +9,5 @@ export default async function(ctx) {
   comment.set('deletedAt', undefined);
   await comment.save();
 
-  await ctx.render(comment);
+  ctx.vmState(comment);
 }

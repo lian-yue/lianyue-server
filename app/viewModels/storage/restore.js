@@ -9,5 +9,5 @@ export default async function(ctx) {
   storage.set('deletedAt', undefined);
   await storage.save();
 
-  await ctx.render(storage)
+  ctx.vmState(storage)
 }

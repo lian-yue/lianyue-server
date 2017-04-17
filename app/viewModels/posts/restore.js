@@ -9,5 +9,5 @@ export default async function(ctx) {
   post.set('deletedAt', undefined);
   await post.save();
 
-  await ctx.render(post);
+  ctx.vmState(post);
 }

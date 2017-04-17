@@ -23,5 +23,5 @@ export default async function(ctx) {
   await token.save();
   token = await ctx.token(2);
 
-  await ctx.render(token)
+  ctx.vmState(token)
 }

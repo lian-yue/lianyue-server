@@ -1,7 +1,7 @@
 import fs from 'fs'
 
 
-import Storage from 'models/storage'
+import {Storage} from 'models'
 
 
 
@@ -46,5 +46,5 @@ export default async function(ctx) {
   await unlink(file.path);
 
   ctx.status = 201;
-  await ctx.render(storage);
+  ctx.vmState(storage);
 }

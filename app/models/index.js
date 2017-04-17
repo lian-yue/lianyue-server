@@ -1,11 +1,22 @@
-require('./model');
+import * as Validator from './validator'
+import Markdown from './markdown'
 
-require('./token');
+import Token from './token'
+import Storage from './storage'
+import Tag from './tag'
+import Post from './post'
+import Comment from './comment'
 
-require('./storage');
+export {
+  Validator,
+  Markdown,
+  Token,
+  Storage,
+  Tag,
+  Post,
+  Comment,
+}
 
-require('./tag');
-
-require('./post');
-
-require('./comment');
+if (module.hot) {
+  module.hot.accept();
+}

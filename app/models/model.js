@@ -1,6 +1,6 @@
-const utils = require('mongoose/lib/utils');
-const mongoose = require('mongoose');
-const markdown = require('./markdown');
+import utils from 'mongoose/lib/utils'
+import mongoose from 'mongoose'
+import markdown from './markdown'
 
 mongoose.Promise = global.Promise;
 
@@ -171,7 +171,7 @@ mongoose.Document.prototype.getMarkdown = function() {
 }
 
 
-module.exports = function(name, schema, options) {
+export default function(name, schema, options) {
   if (schema instanceof mongoose.Schema) {
     if (options) {
       for (let key in options) {

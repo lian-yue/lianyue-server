@@ -5,12 +5,12 @@ export default async (ctx, next) => {
     state = 0
   }
   if (tag.set('state') == state) {
-    await ctx.render({})
+    ctx.vmState({})
     return
   }
 
   tag.set('state', state)
   await tag.save()
 
-  await ctx.render({})
+  ctx.vmState({})
 }

@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import Tag from 'models/tag'
+import { Tag } from 'models'
 const ObjectId = Types.ObjectId
 export default async (ctx, next) => {
   var e
@@ -53,5 +53,5 @@ export default async (ctx, next) => {
     ctx.status = 404
   }
 
-  await ctx.render('tags/index', {results, more});
+  ctx.vmState({results, more});
 }

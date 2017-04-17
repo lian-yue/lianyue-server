@@ -1,48 +1,55 @@
-import koaRouter from 'koa-router'
-import body from '../middlewares/body'
-import admin from '../middlewares/admin'
-import token from '../middlewares/token'
+import Router from 'viewModels/router'
+
+import body from 'viewModels/middlewares/body'
+import admin from 'viewModels/middlewares/admin'
+import token from 'viewModels/middlewares/token'
 
 
 import slug from './middlewares/slug'
 
-export default function router() {
-
-  const router = koaRouter();
+import commentsRoutes from './comments/routes'
 
 
-  router.get('/', require('./index'));
-  router.get('/tag-:tag', require('./index'));
-  router.get('/create', require('./create'));
-  router.get('/:slug/update', require('./update'));
+import comments from './comments.js'
+
+import index from './index'
+import read from './read'
+import editor from './editor'
+import del from './delete'
+import restore from './restore'
 
 
-  router.get('/comments', admin, require('./comments.js'));
-  router.use('/:slug/comments', slug, require('./comments/routes')().routes());
-  router.get('/:slug', slug, require('./read'));
+const router = new Router
+
+
+router.get('posts/index', '/', index);
+router.get('posts/index', '/tag-:tag', index);
+
+
+router.get('comments', '/comments', admin, comments);
+router.use('/:slug/comments', slug, commentsRoutes);
+router.get('posts/read', '/:slug', slug, read);
 
 
 
-  router.use(body);
-  router.use(token);
+router.use(body);
+router.use(token);
 
-  router.use(admin);
+router.use(admin);
 
-  router.put('/', require('./editor'));
-  router.put('/create', require('./editor'));
-  router.post('/', require('./editor'));
-  router.post('/create', require('./editor'));
+router.put('/', editor);
+router.put('/create', editor);
+router.post('/', editor);
+router.post('/create', editor);
 
-  router.patch('/:slug', slug, require('./editor'));
-  router.post('/:slug', slug, require('./editor'));
-
-
-  router.del('/:slug', slug, require('./delete'));
-  router.post('/:slug/delete', slug, require('./delete'));
+router.patch('/:slug', slug, editor);
+router.post('/:slug', slug, editor);
 
 
-  router.post('/:slug/restore', slug, require('./restore'));
+router.del('/:slug', slug, del);
+router.post('/:slug/delete', slug, del);
 
 
-  return router
-}
+router.post('/:slug/restore', slug, restore);
+
+export default router

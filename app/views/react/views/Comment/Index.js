@@ -23,16 +23,6 @@ const title = '评论管理'
 
 
 
-
-var componentServerMount
-if (__SERVER__) {
-  componentServerMount = async function componentServerMount(ctx, state) {
-    state.path = this.context.getPath()
-    this.props.dispatch(actions.addCommentList(state))
-  }
-}
-
-
 @connect(state => ({
   commentList: state.get('commentList'),
   router: state.get('router'),
@@ -50,19 +40,14 @@ export default class Comment extends Component {
     loading: false,
   }
 
-
-  componentServerMount = componentServerMount
-  componentDidMount() {
-    var props = this.props
-    var commentList = this.props.commentList
-    if (commentList.get('path') != this.context.getPath(props)) {
-      props.dispatch(actions.clearCommentList())
-      this.fetch(props)
-    } else if (this.props.commentList.get('messages')) {
-      this.props.dispatch(actions.setMessages(this.props.commentList.toJS(), 'danger', 'popup'))
+  componentWillMount() {
+    if (__SERVER__) {
+      return
     }
+    this.componentWillReceiveProps(this.props)
+  }
 
-
+  componentDidMount() {
     var email = localStorage.getItem('email')
     if (email) {
       this.setState({email})
@@ -76,7 +61,7 @@ export default class Comment extends Component {
 
   componentWillReceiveProps(nextProps) {
     var props = this.props
-    if (this.state.loading || this.context.getPath(props) == this.context.getPath(nextProps)) {
+    if (this.state.loading || nextProps.commentList.get('path') == this.context.getPath(nextProps)) {
       return
     }
     if (!this.isMore) {
@@ -152,20 +137,19 @@ export default class Comment extends Component {
 
 
   async fetch(props) {
+    if (__SERVER__) {
+      return
+    }
     if (this.state.loading) {
       return false
     }
     this.setState({loading: true})
+    await props.dispatch(actions.addCommentList({path: this.context.getPath(props)}))
     try {
       var result = await this.context.fetch(props.location.pathname, props.location.search)
-      if (result.messages) {
-        props.dispatch(actions.setMessages(result, 'danger', 'popup'))
-        return
-      }
-      result.path = this.context.getPath(props)
-      props.dispatch(actions.addCommentList(result))
+      await props.dispatch(actions.addCommentList(result))
     } catch (e) {
-      props.dispatch(actions.setMessages([e, '请重试'], 'danger', 'popup'))
+      await props.dispatch(actions.setMessages(e, 'danger', 'popup'))
     } finally {
       this.setState({loading: false})
     }
@@ -195,7 +179,7 @@ export default class Comment extends Component {
     this.setState({disabled: true});
 
     try {
-      var result = await this.context.fetch(parent.getIn(['post', 'commentUri']) + '/create', {}, body)
+      var result = await this.context.fetch(parent.getIn(['post', 'commentUrl']) + '/create', {}, body)
       if (result.messages) {
         this.props.dispatch(actions.setMessages(result))
         this.setState({disabled: false})
@@ -285,7 +269,7 @@ export default class Comment extends Component {
                 </div>
                 <div className="text">
                   <span className="author vcard">{comment.get('author')}</span>
-                  {post ? <span className="title">在 <Link to={post.get('uri')} title={post.get('title')}>{post.get('title').length > 16 ? post.get('title').substr(0, 13) + '...' : post.get('title')}</Link></span> : ''}
+                  {post ? <span className="title">在 <Link to={post.get('url')} title={post.get('title')}>{post.get('title').length > 16 ? post.get('title').substr(0, 13) + '...' : post.get('title')}</Link></span> : ''}
                   {says}
                   <span className="time"><time dateTime={createdAt} title={createdAt}>{moment(comment.get('createdAt')).fromNow()}</time></span>
                 </div>

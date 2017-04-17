@@ -10,5 +10,5 @@ export default async function(ctx) {
   await comment.save();
 
   ctx.status = 204;
-  await ctx.render(comment);
+  ctx.vmState(comment);
 }

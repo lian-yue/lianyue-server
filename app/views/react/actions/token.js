@@ -14,26 +14,3 @@ export function addToken(value) {
     value: value,
   };
 }
-
-
-export function fetchToken(create, ctx) {
-  if (__SERVER__) {
-    return async function(dispatch) {
-      var token = await ctx.token(create);
-      if (!token) {
-        token = {};
-      } else {
-        token = token.toJSON();
-      }
-      dispatch(setToken(token));
-    }
-  } else {
-    return dispatch => {
-      return fetch('/token?view=json' + (create ? '&create=' + create : ''), {
-        credentials: 'same-origin'
-      })
-        .then(response => response.json())
-        .then(json => dispatch(setToken(json)))
-    }
-  }
-}

@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import Comment from '../../../models/comment'
+import { Comment } from 'models'
 
 const ObjectId = Types.ObjectId
 
@@ -45,5 +45,5 @@ export default async function(ctx) {
 
   comment = await comment.populate('parent').execPopulate()
 
-  await ctx.render(comment)
+  ctx.vmState(comment)
 }

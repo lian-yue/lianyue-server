@@ -6,7 +6,16 @@ import koaStatic   from 'koa-static'
 import moment      from 'moment'
 
 import packageInfo from 'package'
-global.__SERVER__ = true
+
+
+
+var models = require('models')
+
+if (module.hot) {
+  module.hot.accept(['models'], function() {
+    var models = require('models')
+  });
+}
 
 
 // Add http 451 , 499
@@ -19,15 +28,14 @@ export default function() {
 
   const app = new Koa()
 
-
   app.env = process.env.NODE_ENV || 'production'
-
 
   // error
   app.context.onerror = function(err) {
-    if (null == err) {
+    if (null === err) {
       return;
     }
+
     assert(err instanceof Error, 'non-error thrown: ' + err);
     const ctx = this;
 
@@ -57,6 +65,9 @@ export default function() {
       err.status = 500;
     }
 
+    if (!ctx.status || ctx.status < 300 || ctx.status == 404 || err.status >= 500) {
+      ctx.status = err.status;
+    }
 
     ctx.app.emit('error', err, ctx);
 
@@ -69,13 +80,6 @@ export default function() {
       return;
     }
 
-    if (!ctx.status || ctx.status < 300 || ctx.status == 404 || err.status >= 500) {
-      ctx.status = err.status;
-    }
-
-    if (ctx.status >= 300 && ctx.status < 400) {
-      ctx.redirect(err.redirect)
-    }
     var state = {}
 
 
@@ -106,93 +110,42 @@ export default function() {
     }
 
     var data = {
-      success: false,
       status: err.status,
       messages: messages,
     };
     data = Object.assign(state, data);
 
-    ctx.render('messages', data).then(() => {
-      ctx.res.end(ctx.body);
-    }, (err) => {
-      if (data.status == 500) {
-        throw err
-      }
-      err.status = 500
-      this.onerror(err)
-    });
+    ctx.res.end(JSON.stringify(data));
   };
 
 
-
-  app.context.getViewState = function() {
-    if (!this.state.views) {
-      return false
-    }
-    return this.state.views[this.state.views.length -1]
-  }
-
-  app.context.render = async function(relPath, state) {
-    const ctx = this;
-
-    state = state || {}
-    if (typeof state.toJSON == 'function') {
-      state = state.toJSON();
-    }
-    if (relPath instanceof Object) {
-      if (typeof relPath.toJSON == 'function') {
-        relPath = relPath.toJSON();
+  app.context.vmState = function(state) {
+    this.state.vm = this.state.vm || {vmName: this.state.vmName}
+    this.state.vm = this.state.vm || {}
+    if (state) {
+      if (typeof state.toJSON == 'function') {
+        state = state.toJSON();
       }
-      state = Object.assign(relPath, state);
-      relPath = false;
+      Object.assign(this.state.vm, state)
     }
+    return this.state.vm
+  }
 
-    var view = '';
 
-    if (ctx.query.view) {
-      view = ctx.query.view
-    } else if (ctx.request.body instanceof Object && ctx.request.body.view) {
-      view = ctx.request.body.view
-    }
 
-    if (!ctx.state.views) {
-      ctx.state.views = []
-    }
-    ctx.state.views.push(state)
-
-    if (!relPath || relPath === true) {
-      view = 'json';
-    }
-
-    var res
-    switch (view) {
-      case 'json':
-        res = require('views/json')
-        break;
-      case 'rss':
-        res = require('views/rss')
-        break;
-      case 'vue':
-        res = require('views/vue')
-        break;
-      default:
-        res = require('views/react')
-    }
-    return await res.call(this, ctx, relPath, state)
+  app.context.viewModel = function(method, path, query, body) {
+    return require('viewModels').default.match(this, method, path, query, body);
   }
 
 
 
 
-
-
-  const Token = require('models/token');
   async function newToken(create, ctx) {
     if (!create) {
       return false;
     }
 
-    var token = new Token({
+    var token = new models.Token({
       logs:[{
         ip: ctx.request.ip,
         date: new Date,
@@ -225,7 +178,7 @@ export default function() {
 
     var token
     try {
-      token = Token.findById(cookie[0]);
+      token = models.Token.findById(cookie[0]);
       if (create == 2) {
         token = token.read('primary');
       }
@@ -294,50 +247,46 @@ export default function() {
   // timeout
   app.use(async function(ctx, next) {
     var clear = setTimeout(function() {
+      clear = null
       var err = new Error('Request timeout');
       err.status = 502;
       ctx.onerror(err);
     }, 60000);
+
     try {
       await next()
     } catch (e) {
+      throw e
+    } finally {
       clearTimeout(clear);
-      throw e;
+      clear = null
     }
-    clearTimeout(clear);
   })
 
-
-
+  // views  viewModels
   if (process.env.NODE_ENV == 'development') {
-    let routes = require('viewModels/routes')()
-    app.use(function(...args) {
-      return routes.routes().apply(this, args);
+    app.use(function(ctx, next) {
+      return require('views/vue').default(ctx, next)
     });
-    app.use(function(...args) {
-      return routes.allowedMethods().apply(this, args);
+    app.use(function(ctx, next) {
+      return require('views/xml').default(ctx, next)
     });
-
-    if(module.hot) {
-      module.hot.accept('viewModels/routes', function() {
-        routes = require('viewModels/routes')()
-      });
-    }
+    app.use(function(ctx, next) {
+      return require('views/react').default(ctx, next)
+    });
+    app.use(function(ctx, next) {
+      return require('viewModels').default.middleware(ctx, next)
+    });
   } else {
-    const routes = require('viewModels/routes')()
-    app.use(routes.routes());
-    app.use(routes.allowedMethods());
+    app.use(require('views/vue').default);
+    app.use(require('views/xml').default);
+    app.use(require('views/react').default);
+    app.use(require('viewModels').default.middleware);
   }
-
 
   // 404
   app.use(async function(ctx) {
-    ctx.status = 404
-    await ctx.render('messages', {
-      success: false,
-      status: 404,
-      messages: [{code: 404, message: http.STATUS_CODES[404]}],
-    });
+    ctx.throw(http.STATUS_CODES[404], 404);
   })
 
   // 错误捕获
@@ -349,7 +298,5 @@ export default function() {
       console.warn(`${ctx.method} ${ctx.status} ${ctx.url} - ${date} - ${ctx.request.ip} - ${err.message}`);
     }
   });
-
-
   return app
 }

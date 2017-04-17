@@ -11,7 +11,9 @@ export default function(state = defState, action) {
   switch (action.type) {
     case COMMENT_LIST_ADD:
       var value = action.value
-      value.results = state.get('results').concat(fromJS(value.results))
+      if (value.results) {
+        value.results = state.get('results').concat(fromJS(value.results))
+      }
       return state.merge(value)
       break
     case COMMENT_LIST_SET:

@@ -1,9 +1,9 @@
-import koaRouter from 'koa-router'
+import Router from 'viewModels/router'
 
-export default function router() {
-  const router = koaRouter();
+import read from './read'
 
-  router.get('/', require('./read'));
+const router = new Router;
 
-  return router
-}
+router.get('token/read', '/', read);
+
+export default router

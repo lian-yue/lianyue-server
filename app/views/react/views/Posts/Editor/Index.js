@@ -48,11 +48,7 @@ export default class Editor extends Component {
     var slug = this.props.match.params.slug
     try {
       var result = await this.context.fetch((slug ?  '/' + slug : '/create'), {}, body)
-      if (result.messages) {
-        this.props.dispatch(actions.setMessages(result))
-        return
-      }
-      this.props.dispatch(actions.router.push(result.uri + '?message=' + (slug ? 'update' : 'create') + '&r='+ Date.now()))
+      this.props.dispatch(actions.router.push(result.url + '?message=' + (slug ? 'update' : 'create') + '&r='+ Date.now()))
     } catch (e) {
       this.props.dispatch(actions.setMessages(e))
     }
@@ -60,6 +56,9 @@ export default class Editor extends Component {
 
 
   async fetch(props) {
+    if (__SERVER__) {
+      return
+    }
     var slug = props.match.params.slug
     if (!slug) {
       return
@@ -67,15 +66,11 @@ export default class Editor extends Component {
     this.setState({loading: true})
     try {
       var result = await this.context.fetch('/' + slug)
-      if (result.messages) {
-        this.props.dispatch(actions.setMessages(result.messages, 'danger', 'popup'))
-        return
-      }
       result.comment = result.comment ? '1' : ''
       result.page = result.page ? '1' : ''
       props.initialize(result)
     } catch (e) {
-      this.props.dispatch(actions.setMessages([e, '请重试'], 'danger', 'popup'))
+      await props.dispatch(actions.setMessages(e, 'danger', 'popup'))
     } finally {
       this.setState({loading: false})
     }

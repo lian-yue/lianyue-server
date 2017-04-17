@@ -20,7 +20,7 @@ import Theme from './Theme'
 
 moment.locale('zh-cn');
 
-export default async function (inlineState, ctx) {
+export default async function (ctx) {
   const start = new Date;
 
   const location = ctx.url
@@ -31,19 +31,19 @@ export default async function (inlineState, ctx) {
     initialEntries:[location],
   })
 
-  const middleware = routerMiddleware(history)
+  const historyMiddleware = routerMiddleware(history)
 
-  const store = Store({}, [middleware])
+  const store = Store({}, [historyMiddleware])
 
   var app = <Provider store={store}>
     <Router history={history} context={context}>
-      <App />
+      <App ctx={ctx} />
     </Router>
   </Provider>
 
 
   var startTree = new Date;
-  await reactTreeWalker(app, {}, ctx, inlineState);
+  await reactTreeWalker(app, {});
   var msTree = new Date - startTree;
 
   var app = renderToString(app);
@@ -59,12 +59,12 @@ export default async function (inlineState, ctx) {
 
   ctx.set('X-Render-Time', [ms, msTree].join(',') + 'ms');
 
-  return {body}
+  return {body, state: store.getState()}
 }
 
 
 // https://github.com/ctrlplusb/react-tree-walker/blob/master/src/index.js
-async function reactTreeWalker(element, context = {}, ctx, inlineState) {
+async function reactTreeWalker(element, context = {}) {
   if (typeof element.type === 'function') {
     const Component = element.type;
     const props = Object.assign({}, Component.defaultProps, element.props);
@@ -88,13 +88,6 @@ async function reactTreeWalker(element, context = {}, ctx, inlineState) {
 
       instance.pretreatment = true
 
-      if (instance.componentServerMount) {
-        let promise = instance.componentServerMount(ctx, inlineState);
-        if (promise && promise.then) {
-          await promise
-        }
-      }
-
       if (instance.asyncComponent) {
         let promise = instance.asyncComponent()
         if (promise && promise.then) {
@@ -106,6 +99,14 @@ async function reactTreeWalker(element, context = {}, ctx, inlineState) {
         // Make the setState synchronous.
         instance.componentWillMount();
       }
+
+      if (instance.fetch) {
+        let promise = instance.fetch(instance.props)
+        if (promise && promise.then) {
+          await promise
+        }
+      }
+
 
       // Ensure the child context is initialised if it is available. We will
       // need to pass it down the tree.
@@ -123,7 +124,7 @@ async function reactTreeWalker(element, context = {}, ctx, inlineState) {
 
     // Only continue walking if a child exists.
     if (child) {
-      await reactTreeWalker(child, childContext, ctx, inlineState);
+      await reactTreeWalker(child, childContext);
     }
   } else {
     // This must be a basic element, such as a string or dom node.
@@ -137,7 +138,7 @@ async function reactTreeWalker(element, context = {}, ctx, inlineState) {
         }
       });
       for (let i = 0; i < children.length; i++) {
-        await reactTreeWalker(children[i], context, ctx, inlineState)
+        await reactTreeWalker(children[i], context)
       }
     }
   }
