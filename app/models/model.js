@@ -1,5 +1,5 @@
 import utils from 'mongoose/lib/utils'
-import mongoose from 'mongoose'
+import mongoose, { Document, Schema, SchemaType } from 'mongoose'
 import markdown from './markdown'
 
 mongoose.Promise = global.Promise;
@@ -7,9 +7,9 @@ mongoose.Promise = global.Promise;
 const db = mongoose.createConnection(require('config/mongodb'), {noVirtualId: true, useNestedStrict: true,id: false});
 
 function Integer(key, options) {
-  mongoose.SchemaType.call(this, key, options, 'Integer')
+  SchemaType.call(this, key, options, 'Integer')
 }
-Integer.prototype = Object.create(mongoose.Schema.Types.Number.prototype);
+Integer.prototype = Object.create(Schema.Types.Number.prototype);
 
 
 Integer.prototype.cast = function(value) {
@@ -19,7 +19,7 @@ Integer.prototype.cast = function(value) {
   }
   return _value;
 }
-mongoose.Schema.Types.Integer = Integer;
+Schema.Types.Integer = Integer;
 
 ;(function(Schema) {
   if (Schema.prototype.preOriginal) {
@@ -62,7 +62,7 @@ mongoose.Schema.Types.Integer = Integer;
     }
     return this.postOriginal.apply(this, arguments)
   }
-})(mongoose.Schema)
+})(Schema)
 
 
 
@@ -70,7 +70,7 @@ mongoose.Schema.Types.Integer = Integer;
 
 
 
-mongoose.SchemaType.prototype.doValidate = function(value, fn, scope) {
+SchemaType.prototype.doValidate = function(value, fn, scope) {
   var err = false,
       path = this.path,
       count = this.validators.length;
@@ -152,18 +152,7 @@ mongoose.SchemaType.prototype.doValidate = function(value, fn, scope) {
 
 
 
-mongoose.Document.prototype.savePost = function(fn) {
-  this.$_savePosts = this.$_savePosts || []
-  this.$_savePosts.push(fn)
-  return this
-}
-mongoose.Document.prototype.removePost = function(fn) {
-  this.$_removePosts = this.$_removePosts || []
-  this.$_removePosts.push(fn)
-  return this
-}
-
-mongoose.Document.prototype.getMarkdown = function() {
+Document.prototype.getMarkdown = function() {
   if (!this.$_markdown) {
     this.$_markdown = markdown(this.get('content'), {modelName: this.constructor.modelName})
   }
@@ -172,14 +161,14 @@ mongoose.Document.prototype.getMarkdown = function() {
 
 
 export default function(name, schema, options) {
-  if (schema instanceof mongoose.Schema) {
+  if (schema instanceof Schema) {
     if (options) {
       for (let key in options) {
         schema.set(key, options[value]);
       }
     }
   } else {
-    schema = new mongoose.Schema(schema, options || {});
+    schema = new Schema(schema, options || {});
   }
   var path = schema.path('content')
   if (path) {

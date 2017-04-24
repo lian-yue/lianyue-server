@@ -1,6 +1,6 @@
 <template>
 
-<div id="post-home"></div>
+<div id="post-home">home</div>
 
 </template>
 

@@ -14,7 +14,7 @@ export default class Router {
 
   }
 
-  async match(ctx, method, path, query, body, recursion) {
+  async match(ctx, method, path, query, body, next, recursion) {
     method = method || 'GET'
     query = query || {}
     path = path || '/'
@@ -57,7 +57,7 @@ export default class Router {
 
     var dispatch = (routeIndex, middlewareIndex) => {
       if (!this.stack[routeIndex]) {
-        return Promise.resolve()
+        return Promise.resolve(next)
       }
       var route = this.stack[routeIndex]
       if (middlewareIndex == 0) {
@@ -90,7 +90,9 @@ export default class Router {
         return Promise.resolve(dispatch(routeIndex + 1, 0))
       }
       if (fn instanceof this.constructor) {
-        return Promise.resolve(fn.match(ctx, ctx.method, ctx.path.substr(ctx.routeMatches ? ctx.routeMatches[0].length : 0), ctx.query, ctx.request.body, true))
+        return Promise.resolve(fn.match(ctx, ctx.method, ctx.path.substr(ctx.routeMatches ? ctx.routeMatches[0].length : 0), ctx.query, ctx.request.body, function() {
+          return dispatch(routeIndex, middlewareIndex + 1)
+        }, true))
       } else {
         return Promise.resolve(fn(ctx, function() {
           return dispatch(routeIndex, middlewareIndex + 1)
@@ -128,15 +130,20 @@ export default class Router {
   }
 
   middleware = async (ctx, next) => {
-    var state = await this.match(ctx, ctx.method, ctx.path, ctx.query, ctx.request.body)
-    if (ctx.body !== null && ctx.body !== undefined) {
+    var isNext = false
+    var state = await this.match(ctx, ctx.method, ctx.path, ctx.query, ctx.request.body, function() {
+      isNext = true
+    })
 
-    } else if (state) {
+    if (isNext) {
+      await next()
+      return
+    }
+
+    if (state && (!ctx.body || typeof ctx.body == 'string')) {
       ctx.type = 'json'
       ctx.set("X-Content-Type-Options", 'nosniff')
       ctx.body = JSON.stringify(state)
-    } else {
-      await next()
     }
   }
 

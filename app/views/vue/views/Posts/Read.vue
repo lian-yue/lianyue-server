@@ -1,6 +1,6 @@
 <template>
 
-<div id="post-read"></div>
+<div id="post-read">read</div>
 
 </template>
 

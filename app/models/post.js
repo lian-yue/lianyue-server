@@ -140,7 +140,7 @@ var schema = new Schema({
     type: String,
   },
 
-  // 摘要
+  // 描述
   description: {
     type: String,
     trim: true,

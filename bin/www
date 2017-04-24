@@ -13,28 +13,36 @@ const host  = process.env.HOST || '0.0.0.0'
 var server
 if (process.env.NODE_ENV == 'development') {
   const webpack = require('webpack')
-  const MemoryFileSystem  = require('memory-fs')
 
 
-  const config = require('../webpack.config.server')
+  const configs = require('../webpack.config.server')
+  let key = 0
+  function watch() {
+    let config = configs[key]
+    let compiler = webpack(config)
+    key++
 
-  const fs = new MemoryFileSystem()
+    compiler.watch({
+      aggregateTimeout: 1000,
+      poll: true,
+    }, (err, stats) => {
+      if (err) {
+        throw err
+      }
+      stats = stats.toJson()
+      stats.errors.forEach(err => console.error(err))
+      stats.warnings.forEach(err => console.warn(err))
+      if (configs[key]) {
+        watch()
+      } else {
+        if (!server) {
+          server = app()
+        }
+      }
+    })
+  }
 
-  const compiler = webpack(config)
-  compiler.watch({
-    aggregateTimeout: 1000,
-    poll: true,
-  }, (err, stats) => {
-    if (err) {
-      throw err
-    }
-    stats = stats.toJson()
-    stats.errors.forEach(err => console.error(err))
-    stats.warnings.forEach(err => console.warn(err))
-    if (!server) {
-      server = app()
-    }
-  })
+  watch()
 } else {
   server = app()
 }

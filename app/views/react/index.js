@@ -6,6 +6,9 @@ export default async function(ctx, next) {
     await next()
     return
   }
+  if (ctx.cookies.get('view')) {
+    ctx.cookies.set('view', 'deleted', {expires: new Date(86400 * 1000 * 2), path:'/', httponly: true})
+  }
 
   var {redirect, body, state} = await server(ctx);
 
@@ -15,7 +18,7 @@ export default async function(ctx, next) {
   }
 
   if (!body) {
-    var e = new Error('React match is empty');
+    var e = new Error('Router not match');
     e.status = 404
     throw e;
   }

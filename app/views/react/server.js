@@ -14,7 +14,7 @@ import actions from './actions'
 
 import App from './views/App'
 
-import Theme from './Theme'
+import Template from './Template'
 
 
 
@@ -52,7 +52,7 @@ export default async function (ctx) {
     return {redirect: context.url}
   }
 
-  var html = renderToStaticMarkup(<Theme store={store}>{app}</Theme>)
+  var html = renderToStaticMarkup(<Template store={store}>{app}</Template>)
   var body = '<!DOCTYPE html>' + html
 
   var ms = new Date - start;
