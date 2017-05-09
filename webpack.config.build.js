@@ -26,9 +26,13 @@ if (!(configServer instanceof Array)) {
   configServer = [configServer]
 }
 
-config.push(...configServer)
+if (!process.env.npm_config_noServer) {
+  config.push(...configServer)
+}
 
-config.push(...configClient)
+if (!process.env.npm_config_noClient) {
+  config.push(...configClient)
+}
 
 
 module.exports = config

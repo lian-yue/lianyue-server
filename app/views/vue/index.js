@@ -1,5 +1,8 @@
 import { createBundleRenderer } from 'vue-server-renderer'
 import cache from 'lru-cache'
+import moment from 'moment'
+
+moment.locale('zh-cn')
 
 function createRenderer() {
   return createBundleRenderer(require('vue-ssr-bundle'), {
@@ -22,15 +25,36 @@ export default async function(ctx, next) {
     ctx.cookies.set('view', 'vue', {expires: new Date(Date.now() + 86400 * 365 * 1000), path:'/', httponly: true})
   }
 
-  var body = await new Promise(function(resolve, reject) {
-    renderer.renderToString({url : ctx.url, ctx}, function(err, body) {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(body)
+
+
+
+  try {
+    var body = await new Promise(function(resolve, reject) {
+      renderer.renderToString({url : ctx.url, ctx}, function(err, body) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(body)
+        }
+      })
+    });
+  } catch (err) {
+    if (!(err instanceof Error)) {
+      var e = new Error(err.message)
+      e.stack = err.stack
+      e.lineNumber = err.lineNumber
+      e.fileName = err.fileName
+      e.columnNumber = err.columnNumber
+      if (err.name) {
+        e.name = err.name
       }
-    })
-  });
+      for (var key in err) {
+        e[key] = err[key]
+      }
+      throw e
+    }
+    throw err
+  }
 
   ctx.type = 'text/html'
   ctx.body = body

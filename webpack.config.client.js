@@ -6,6 +6,7 @@ const precss            = require('precss')
 const autoprefixer      = require('autoprefixer')
 
 const packageInfo       = require('./package')
+const site              = require('./config/site')
 
 // process.traceDeprecation = true
 
@@ -15,7 +16,10 @@ const isDev = process.env.NODE_ENV == 'development'
 
 
 
-function base(name) {
+function base(opts) {
+  opts = opts || {}
+  const publicPath = site.assets + opts.name + '/'
+
   const extractCSS = new ExtractTextPlugin({
     filename: "[name].css",
     disable: isDev,
@@ -24,22 +28,22 @@ function base(name) {
   var config = {
     entry: {
       index: [
-        path.join(__dirname, 'app/views/' + name + '/client.js'),
+        path.join(__dirname, 'app/views/' + opts.name + '/client.js'),
       ],
     },
 
     output: {
-      path: path.join(__dirname, 'public/assets/'+ name +'/'),
-      publicPath:  isDev ? 'http://localhost:3000/assets/' + name + '/' : '/assets/'+ name +'/',
+      path: path.join(__dirname, 'public/assets/'+ opts.name +'/'),
+      publicPath,
       filename: "[name].js",
       chunkFilename: "[chunkhash:8].[name].chunk.js",
     },
 
     devServer: {
       hot: true,
-      contentBase: path.join(__dirname, 'public/assets/' + name+'/'),
+      contentBase: path.join(__dirname, 'public/assets/' + opts.name+'/'),
       noInfo: true,
-      publicPath: isDev ? 'http://localhost:3000/assets/' + name + '/' : '/assets/'+ name +'/',
+      publicPath,
       inline: true,
       historyApiFallback: true,
       overlay: {
@@ -52,8 +56,12 @@ function base(name) {
     resolve: {
       modules: [
         path.join(__dirname, 'node_modules'),
-        path.join(__dirname),
       ],
+      alias: {
+        package: path.join(__dirname, 'package.js'),
+        config: path.join(__dirname, 'config'),
+        models: path.join(__dirname, 'app/models'),
+      },
       extensions: [
         isDev ? '.dev.js' : '.prod.js',
         isDev ? '.dev.jsx' : '.prod.jsx',
@@ -98,10 +106,10 @@ function base(name) {
               {
                 loader: 'sass-loader',
                 options: {
+                  sourceMap: true,
                   includePaths: [
                     path.join(__dirname, 'node_modules'),
                   ],
-                  sourceMap: true,
                 }
               }
             ],
@@ -207,7 +215,9 @@ function base(name) {
               loader: 'url-loader',
               options: {
                 limit: 4096,
-                name: 'images/[name].[ext]?[hash:8]'
+                name: 'images/[name].[ext]?[hash:8]',
+                publicPath,
+                useRelativePath: !isDev,
               }
             }
           ]
@@ -219,7 +229,9 @@ function base(name) {
               loader: 'url-loader',
               options: {
                 limit: 4096,
-                name: 'fonts/[name].[ext]?[hash:8]'
+                name: 'fonts/[name].[ext]?[hash:8]',
+                publicPath,
+                useRelativePath: !isDev,
               }
             }
           ]
@@ -240,13 +252,20 @@ function base(name) {
         __ENV__: JSON.stringify(process.env.NODE_ENV),
         __SERVER__: false,
       }),
+      new webpack.ContextReplacementPlugin(/^\.\/locale$/, (context) => {
+        if (context.regExp) {
+          Object.assign(context, {
+            regExp: /^\.\/(zh-cn)/,
+          })
+        }
+      })
     ],
 
     devtool: isDev ? 'eval-source-map' : 'source-map'
 
   }
   if (isDev) {
-    config.entry.index.unshift('webpack-hot-middleware/client?name=' + name)
+    config.entry.index.unshift('webpack-hot-middleware/client?name=' + opts.name)
     config.plugins.push(
       new webpack.HotModuleReplacementPlugin()
     )
@@ -268,7 +287,7 @@ function base(name) {
 
 }
 
-const ie = merge(base('ie'), {
+const ie = merge(base({name: 'ie'}), {
   module: {
     rules: [
       {
@@ -290,7 +309,7 @@ const ie = merge(base('ie'), {
   }
 })
 
-const react = merge(base('react'), {
+const react = merge(base({name: 'react'}), {
   module: {
     rules: [
       {
@@ -300,6 +319,9 @@ const react = merge(base('react'), {
       {
         test: /\.jsx?$/,
         use: [
+          {
+            loader: 'react-hot-loader/webpack',
+          },
           {
             loader: 'babel-loader',
             options: {
@@ -330,7 +352,7 @@ if (isDev) {
 
 
 
-const vue = merge(base('vue'), {
+const vue = merge(base({name:'vue'}), {
   resolve: {
     extensions: [
       isDev ? '.dev.vue' : '.prod.vue',
@@ -357,7 +379,28 @@ const vue = merge(base('vue'), {
               ];
             }
           },
+          cssModules: {
+            localIdentName: '[hash:base64:6]',
+            camelCase: true
+          },
+
           loaders: {
+            js: [
+              {
+                loader: 'babel-loader',
+                options: {
+                  presets: [
+                    "es2015",
+                    "stage-0"
+                  ],
+                  plugins: [
+                    "transform-decorators-legacy",
+                    "transform-runtime",
+                  ],
+                  cacheDirectory: isDev
+                }
+              }
+            ],
             sass: [
               {
                 loader: 'vue-style-loader',
@@ -370,6 +413,13 @@ const vue = merge(base('vue'), {
               },
               {
                 loader: 'sass-loader',
+                options: {
+                  sourceMap: true,
+                  indentedSyntax: true,
+                  includePaths: [
+                    path.join(__dirname, 'node_modules'),
+                  ],
+                }
               },
             ],
             scss: [
@@ -385,7 +435,10 @@ const vue = merge(base('vue'), {
               {
                 loader: 'sass-loader',
                 options: {
-                  indentedSyntax: true,
+                  sourceMap: true,
+                  includePaths: [
+                    path.join(__dirname, 'node_modules'),
+                  ],
                 },
               },
             ]

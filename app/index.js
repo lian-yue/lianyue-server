@@ -18,10 +18,8 @@ if (module.hot) {
 }
 
 
-// Add http 451 , 499
+// Add http 451
 http.STATUS_CODES[451] = 'Unavailable For Legal Reasons'
-http.STATUS_CODES[499] = 'Request aborted'
-
 
 
 export default function() {
@@ -49,7 +47,7 @@ export default function() {
     }
 
     if ((err.code == 'HPE_INVALID_EOF_STATE' || err.code == 'ECONNRESET' || err.message == 'Request aborted') && !err.status) {
-      err.status = 499;
+      err.status = 408;
     }
 
     if (err.name == 'ValidationError' || err.name == 'ValidatorError') {
@@ -71,7 +69,7 @@ export default function() {
 
     ctx.app.emit('error', err, ctx);
 
-    if (err.status == 499) {
+    if (err.status == 408) {
       return;
     }
 
@@ -120,7 +118,6 @@ export default function() {
 
 
   app.context.vmState = function(state) {
-    this.state.vm = this.state.vm || {vmName: this.state.vmName}
     this.state.vm = this.state.vm || {}
     if (state) {
       if (typeof state.toJSON == 'function') {
@@ -263,8 +260,19 @@ export default function() {
     }
   })
 
+
   // views  viewModels
   if (process.env.NODE_ENV == 'development') {
+    // delay
+    app.use(async function(ctx, next) {
+      await new Promise(function(resolve, reject) {
+        setTimeout(function() {
+          resolve()
+        }, 200 + parseInt(Math.random() * 1500));
+      });
+      await next()
+    })
+
     app.use(function(ctx, next) {
       return require('views/vue').default(ctx, next)
     });

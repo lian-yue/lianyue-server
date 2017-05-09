@@ -1,11 +1,13 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-import * as actions from './actions'
-import * as getters from './getters'
-import * as mutations from './mutations'
+import actions from './actions'
+import getters from './getters'
+import mutations from './mutations'
 
 import * as modules from './modules'
+
+
 
 
 Vue.use(Vuex)
@@ -17,9 +19,9 @@ if (process.env.NODE_ENV === 'development') {
     store.subscribe(function(mutation, state) {
       if (__SERVER__) {
         const debug = require('debug')('vue:vuex')
-        debug('%s  %s', mutation.type, JSON.stringify(state, null, '  '));
+        debug('%s  %s', mutation.type, JSON.stringify(mutation.payload, null, '  '));
       } else {
-        console.log(mutation.type, state)
+        console.log(mutation.type, mutation.payload)
       }
     })
   })

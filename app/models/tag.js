@@ -63,6 +63,7 @@ var schema = new Schema({
   //  内容
   content: {
     type: String,
+    default: '',
     maxlength: [1024 * 128, '内容不能大于 128KB {PATH}'],
   },
 

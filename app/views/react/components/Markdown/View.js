@@ -99,6 +99,14 @@ export default class View extends PureComponent {
       element = elements[i]
       if (!element.onclick) {
         element.onclick = function(e) {
+          // don't redirect with control keys
+          if (e.metaKey || e.ctrlKey || e.shiftKey) return
+          // don't redirect when preventDefault called
+          if (e.defaultPrevented) return
+          // don't redirect on right click
+          if (e.button !== undefined && e.button !== 0) return
+
+
           if (!this.getAttribute('target')) {
             this.setAttribute('target', '_blank')
           }

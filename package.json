@@ -1,6 +1,6 @@
 {
   "name": "lianyue-server",
-  "version": "0.1.222",
+  "version": "0.1.309",
   "private": true,
   "author": "lianyue <admin@lianyue.org>",
   "description": "",
@@ -29,7 +29,7 @@
     "debug": "^2.2.0",
     "ejs": "^2.5.1",
     "ejs-loader": "^0.3.0",
-    "es6-promise": "^3.2.1",
+    "es6-promise": "^4.1.0",
     "highlight.js": "^9.9.0",
     "history": "^4.6.1",
     "i18n": "^0.8.3",
@@ -61,7 +61,8 @@
     "vue": "^2.2.6",
     "vue-router": "^2.4.0",
     "vue-server-renderer": "^2.2.6",
-    "vuex": "^2.3.0",
+    "vue-upload-component": "^2.3.0-beta.2",
+    "vuex": "^2.3.1",
     "vuex-router-sync": "^4.1.2",
     "whatwg-fetch": "^1.0.0"
   },

@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+import * as types from '../types'
+
 
 function removeHeaders() {
   if (!__SERVER__) {
@@ -18,23 +20,23 @@ function removeHeaders() {
   }
 }
 
-
 function addHeaders(payload) {
   if (!__SERVER__) {
     var head = document.querySelector('head');
     Object.keys(payload).forEach(function(name) {
-      if (name == 'status' || name == 'type') {
-        return
-      }
       var value = payload[name]
       if (name == 'title') {
         document.title = value.join(' - ');
         return
       }
       if (name == 'html') {
-        value.forEach(function(value, name) {
-          document.documentElement.setAttribute(name, value)
+        Object.keys(value).forEach(function(key) {
+          document.documentElement.setAttribute(key, value[key])
         })
+        return
+      }
+
+      if (['meta', 'link'].indexOf(name) == -1) {
         return
       }
       value.forEach(function(attrs) {
@@ -48,52 +50,6 @@ function addHeaders(payload) {
     })
   }
 }
-
-
-export function headers(state, payload) {
-  removeHeaders()
-  addHeaders(payload)
-  state.headers = payload
-}
-
-export function messages(state, payload) {
-  payload = toObject(payload)
-  if (payload.errors) {
-    payload.messages =  payload.errors
-    delete payload.errors
-  }
-
-  if (payload.messages) {
-    delete payload.message
-  }
-
-  if (payload.message) {
-    payload.messages = [payload]
-    delete payload.message
-  }
-
-  payload.type = payload._type
-  payload.name = payload.name || ''
-
-  Vue.set(state.messages, payload.name, payload)
-}
-
-export function closeMessages(state, payload) {
-  if (state.messages[payload.name] && !state.messages[payload.name].close) {
-    Vue.set(state.messages[payload.name], 'close', true)
-  }
-}
-
-export function token(state, payload) {
-  var token = payload.token || {}
-  state.token = payload.add ? {...state.token, ...token} : token
-}
-
-export function protocol(state, payload) {
-  state.protocol = payload.protocol || 'http'
-}
-
-
 
 
 function toObject(data) {
@@ -113,4 +69,49 @@ function toObject(data) {
   }
 
   return data
+}
+
+export default {
+  [types.HEADERS](state, payload) {
+    removeHeaders()
+    addHeaders(payload)
+    state.headers = payload
+  },
+
+  [types.MESSAGES](state, payload) {
+    payload = toObject(payload)
+    if (payload.errors) {
+      payload.messages = payload.errors
+      delete payload.errors
+    }
+
+    if (payload.messages) {
+      delete payload.message
+    }
+
+    if (payload.message) {
+      payload = {...payload, messages: [payload]}
+      delete payload.message
+    }
+
+    payload.type = payload._type
+    payload.name = payload.name || ''
+
+    Vue.set(state.messages, payload.name, payload)
+  },
+
+  [types.MESSAGES_CLOSE](state, payload) {
+    if (state.messages[payload.name] && !state.messages[payload.name].close) {
+      Vue.set(state.messages[payload.name], 'close', true)
+    }
+  },
+
+  [types.TOKEN](state, payload) {
+    var token = payload.token || {}
+    state.token = payload.add ? {...state.token, ...token} : token
+  },
+
+  [types.PROTOCOL](state, payload) {
+    state.protocol = payload.protocol || 'http'
+  },
 }

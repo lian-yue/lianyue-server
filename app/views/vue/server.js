@@ -1,17 +1,36 @@
 import { app, router, store } from './app'
+import {PROTOCOL , TOKEN, HEADERS} from './store/types'
 
 
 export default async function(context) {
+
   var ctx = context.ctx
   router.push(ctx.url)
-  store.commit('protocol', {protocol: ctx.protocol})
+  store.commit({
+    type: PROTOCOL,
+    protocol: ctx.protocol
+  })
   var token = await ctx.token()
   if (token) {
-    store.commit('token', {token: token.toJSON()})
+    store.commit({
+      type: TOKEN,
+      token: token.toJSON()
+    })
   }
-  store.commit('headers', {status: 404, meta: [{
-    www: 211,
-  }]})
+
+  store.commit.fetch = async function (path, query, body) {
+    query = query || {}
+    if (typeof query != 'object') {
+      query = queryString.parse(query)
+    }
+    try {
+      return await ctx.viewModel(body ? 'POST' : 'GET', path, query, body).then(state => toJSONObject(state))
+    } catch (err) {
+      ctx.app.emit('error', err, ctx);
+      throw err
+    }
+  }
+
 
   await new Promise((resolve, reject) => {
     router.onReady(() => {
@@ -24,12 +43,30 @@ export default async function(context) {
       }
 
       Promise.all(matchedComponents.map(component => {
-        return component.preFetch && component.preFetch(store)
+        if (!component.methods) {
+          return
+        }
+        if (!component.methods.fetch) {
+          return
+        }
+        return component.methods.fetch(store)
       })).then(() => {
+        matchedComponents.map(component => {
+          if (!component.headers) {
+            return
+          }
+          var headers = component.headers(store)
+          if (headers) {
+            headers.type = HEADERS
+            store.commit(headers)
+          }
+        })
         resolve(app)
       }).catch(reject)
     })
   })
+
+
 
 
   context.state = store.state
@@ -82,4 +119,26 @@ function htmlencode(str) {
     .replace(/>/g,"&gt;")
     .replace(/\'/g,"&#39;")
     .replace(/\"/g,"&quot;")
+}
+
+
+
+
+
+
+function toJSONObject(state) {
+  for (var key in state) {
+    if (!state[key]) {
+      continue
+    }
+    if (typeof state[key] != 'object') {
+      continue
+    }
+    if (typeof state[key].toJSON == 'function') {
+      state[key] = state[key].toJSON()
+    } else {
+      state[key] = toJSONObject(state[key])
+    }
+  }
+  return state
 }

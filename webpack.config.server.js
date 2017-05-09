@@ -8,7 +8,7 @@ const { VueSSRServerPlugin } = require('vue-ssr-webpack-plugin')
 
 
 const packageInfo       = require('./package')
-
+const site              = require('./config/site')
 
 var ignoreModules = fs.readdirSync('node_modules')
 
@@ -19,7 +19,11 @@ const isDev = process.env.NODE_ENV == 'development'
 
 
 
-function base() {
+function base(opts) {
+  opts = opts || {}
+  opts.externals = opts.externals || '../'
+  const publicPath = site.assets + opts.name + '/'
+
   return {
     output: {
       path: path.resolve(__dirname, isDev ? 'dev' : 'dist'),
@@ -44,9 +48,17 @@ function base() {
     resolve: {
       modules: [
         path.join(__dirname, 'node_modules'),
-        path.join(__dirname, 'app'),
         path.join(__dirname, isDev ? 'dev' : 'dist'),
       ],
+
+      alias: {
+        package: path.join(__dirname, 'package.js'),
+        config: path.join(__dirname, 'config'),
+        models: path.join(__dirname, 'app/models'),
+        viewModels: path.join(__dirname, 'app/viewModels'),
+        views: path.join(__dirname, 'app/views'),
+      },
+
       extensions: [
         isDev ? '.dev.js' : '.prod.js',
         isDev ? '.dev.jsx' : '.prod.jsx',
@@ -74,12 +86,12 @@ function base() {
 
         //  config 配置文件
         if (pathStart == 'config') {
-          return callback(null, 'commonjs2 ../' + request);
+          return callback(null, 'commonjs2 ' + opts.externals + request);
         }
 
         //  package 配置文件
         if (pathStart == 'package') {
-          return callback(null, 'commonjs2 ../' + request);
+          return callback(null, 'commonjs2 ' + opts.externals + request);
         }
 
         //  vue-ssr-bundle
@@ -115,7 +127,9 @@ function base() {
               loader: 'url-loader',
               options: {
                 limit: 4096,
-                name: 'images/[name].[ext]?[hash:8]'
+                name: 'images/[name].[ext]?[hash:8]',
+                publicPath,
+                useRelativePath: !isDev,
               }
             }
           ]
@@ -127,7 +141,9 @@ function base() {
               loader: 'url-loader',
               options: {
                 limit: 4096,
-                name: 'fonts/[name].[ext]?[hash:8]'
+                name: 'fonts/[name].[ext]?[hash:8]',
+                publicPath,
+                useRelativePath: !isDev,
               }
             }
           ]
@@ -169,7 +185,7 @@ function base() {
 
 
 
-const index = merge(base(), {
+const index = merge(base({name: 'react'}), {
   entry: {
     index: [
       path.resolve(__dirname, 'app'),
@@ -228,9 +244,9 @@ if (isDev) {
 }
 
 
-const viewsVue = merge(base(), {
+const vue = merge(base({name: 'vue', externals: '../../'}), {
   entry: {
-    viewsVue: [
+    vue: [
       path.resolve(__dirname, 'app/views/vue/server'),
     ],
   },
@@ -257,7 +273,27 @@ const viewsVue = merge(base(), {
               ];
             }
           },
+          cssModules: {
+            localIdentName: '[hash:base64:6]',
+            camelCase: true
+          },
           loaders: {
+            js: [
+              {
+                loader: 'babel-loader',
+                options: {
+                  presets: [
+                    "es2015",
+                    "stage-0"
+                  ],
+                  plugins: [
+                    "transform-decorators-legacy",
+                    "transform-runtime",
+                  ],
+                  cacheDirectory: isDev
+                }
+              }
+            ],
             sass: [
               {
                 loader: 'vue-style-loader',
@@ -270,6 +306,13 @@ const viewsVue = merge(base(), {
               },
               {
                 loader: 'sass-loader',
+                options: {
+                  sourceMap: true,
+                  indentedSyntax: true,
+                  includePaths: [
+                    path.join(__dirname, 'node_modules'),
+                  ],
+                }
               },
             ],
             scss: [
@@ -285,7 +328,10 @@ const viewsVue = merge(base(), {
               {
                 loader: 'sass-loader',
                 options: {
-                  indentedSyntax: true,
+                  sourceMap: true,
+                  includePaths: [
+                    path.join(__dirname, 'node_modules'),
+                  ],
                 },
               },
             ]
@@ -318,8 +364,7 @@ const viewsVue = merge(base(), {
     new VueSSRServerPlugin(),
   ],
 })
-
 module.exports = [
-  viewsVue,
+  vue,
   index,
 ]

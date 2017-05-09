@@ -1,0 +1,105 @@
+@import "variables"
+
+
+#posts-read
+  article
+    position: relative
+  .entry-title
+    color: $link-color
+    line-height: 1.5
+    margin-bottom: 1rem
+    font-size: 2rem
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+    width: 85%
+  .entry-meta
+    position: absolute
+    top: 0
+    right: 0
+    color: $gray-light
+    font-size: .85rem
+    a,
+    a:hover,
+    a:active,
+      text-decoration: none
+      color: lighten($gray-light, 15%)
+    span,
+    time
+      line-height: 1.8
+      text-align: right
+      display: block
+    .comments-link
+      display: none
+  .entry-content
+    margin-bottom: 1.4rem
+  .entry-footer
+    color: $gray
+    margin-top: 1rem
+    time
+      color: $gray-light
+    .tag-links
+      a + a
+        display: inline-block
+        &::before
+          color: $gray-light
+          display: inline-block
+          content: ", "
+          padding-right: .4rem
+          padding-left: .4rem
+  .pagination
+    border-top: 1px solid $border-color
+    font-size: 1.1rem
+    padding: 1.2rem 0
+.comments-inline
+  padding-top: 1rem
+  border-top: 1px solid $border-color
+#posts-index
+  @extend #posts-read
+  .pagination
+    border: 0
+    .next,
+    .prev,
+      display: none
+  .title
+    display: none
+    + article
+      margin-top: 0
+  article
+    margin-top: 1.6rem
+    border-bottom: 1px solid $border-color
+    &:first-child
+      margin-top: 0
+    .entry-meta
+      .comments-link
+        display: block
+    .entry-content
+      margin-bottom: 1.6rem
+      h1,
+      h2,
+      h3,
+      h4,
+        font-weight: normal
+        border: 0
+      hr
+        border: 0
+        margin: 0
+        padding: 0
+@include media-breakpoint-down(md)
+  #posts-read
+    article
+      .entry-title
+        line-height: 1.25
+        overflow: visible
+        text-overflow: clip
+        white-space: normal
+        width: auto
+      .entry-meta
+        display: none
+  #posts-index
+    article
+      margin-top: 1.4rem
+      &:first-child
+        margin-top: .4rem
+      .entry-content
+        margin-bottom: 1.6rem

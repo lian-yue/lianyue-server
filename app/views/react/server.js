@@ -10,7 +10,6 @@ import { Provider } from 'react-redux'
 
 
 import Store from './store'
-import actions from './actions'
 
 import App from './views/App'
 
@@ -64,12 +63,13 @@ export default async function (ctx) {
 
 
 // https://github.com/ctrlplusb/react-tree-walker/blob/master/src/index.js
-async function reactTreeWalker(element, context = {}) {
+async function reactTreeWalker(element, context = {}, parent) {
   if (typeof element.type === 'function') {
     const Component = element.type;
     const props = Object.assign({}, Component.defaultProps, element.props);
     let childContext = context;
     let child;
+    let render
 
     // Is this a class component? (http://bit.ly/2j9Ifk3)
     const isReactClassComponent = Component.prototype &&
@@ -100,11 +100,12 @@ async function reactTreeWalker(element, context = {}) {
         instance.componentWillMount();
       }
 
-      if (instance.fetch) {
+      if (instance.fetch && parent) {
         let promise = instance.fetch(instance.props)
         if (promise && promise.then) {
           await promise
         }
+        await reactTreeWalker(parent(), context)
       }
 
 
@@ -116,15 +117,21 @@ async function reactTreeWalker(element, context = {}) {
 
       // Get the render output as the child.
       child = instance.render();
+      render = function() {
+        return instance.render()
+      }
     } else {
       // Stateless Functional Component
       // Get the output for the function, as the child.
       child = Component(props, context);
+      render = function() {
+        return Component(props, context)
+      }
     }
 
     // Only continue walking if a child exists.
     if (child) {
-      await reactTreeWalker(child, childContext);
+      await reactTreeWalker(child, childContext, render);
     }
   } else {
     // This must be a basic element, such as a string or dom node.

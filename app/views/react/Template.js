@@ -13,8 +13,8 @@ export default function({store, children}) {
   const title = headers.get('title') || []
   const meta = headers.get('meta') || []
   const link = headers.get('link') || []
-  const ie = `<!--[if lt IE 9]><script type="text/javascript" src="${site.assets}/ie/index.js?v=${process.env.version}"></script><![endif]-->`;
-  const css = process.env.NODE_ENV == 'development' ? null : <link rel="stylesheet" type="text/css"  media="all" href={site.assets + '/react/index.css?v=' + process.env.version} />
+  const ie = `<!--[if lt IE 9]><script type="text/javascript" src="${site.assets}ie/index.js?v=${process.env.version}"></script><![endif]-->`;
+  const css = process.env.NODE_ENV == 'development' ? null : <link rel="stylesheet" type="text/css"  media="all" href={site.assets + 'react/index.css?v=' + process.env.version} />
   return <html lang="zh-CN" {...html}>
     <head>
       <meta charSet="utf-8" />
@@ -46,7 +46,7 @@ export default function({store, children}) {
       <div id="ie" dangerouslySetInnerHTML={{__html: ie}}></div>
       <div id="app" dangerouslySetInnerHTML={{__html: children}}></div>
       <script type="text/javascript" dangerouslySetInnerHTML={{__html:  reduxState}}></script>
-      <script type="text/javascript" src={site.assets + '/react/index.js?v=' + process.env.version} async></script>
+      <script type="text/javascript" src={site.assets + 'react/index.js?v=' + process.env.version} async></script>
     </body>
   </html>
 }

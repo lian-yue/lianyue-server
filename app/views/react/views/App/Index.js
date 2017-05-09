@@ -105,9 +105,9 @@ export default class App extends Component{
   }
 
   state = {
-    github: '',
-    email: '',
-    feed: '',
+    github: '#',
+    email: '#',
+    feed: '#',
   }
 
   getChildContext() {
@@ -303,7 +303,7 @@ export default class App extends Component{
     this.setState({
       github: '//github.com/lian-yue',
       email: 'mailto:' + site.email,
-      feed: '//www.lianyue.org?view=json',
+      feed: '/?view=json',
     })
     window.addEventListener('resize', this.onResize)
     this.onResize()
@@ -323,13 +323,7 @@ export default class App extends Component{
     const html = document.documentElement
     const footer = document.getElementById('footer')
     const container = document.getElementById('container')
-    var marginTop
-    if (html.currentStyle) {
-      marginTop =  html.currentStyle.marginTop.marginTop
-    } else if (window.getComputedStyle) {
-      marginTop = document.defaultView.getComputedStyle(html, null).marginTop
-    }
-    marginTop = parseInt(marginTop.substr(0, marginTop.length - 2))
+    var marginTop = html.offsetTop
     const minHeight = document.documentElement.clientHeight - footer.offsetHeight - marginTop - 10
     container.style.minHeight = minHeight + 'px'
   }
@@ -398,7 +392,7 @@ export default class App extends Component{
       <footer id="footer" role="contentinfo">
         <div className="info">
           <span className="copyright">Copyright&nbsp;&#169;&nbsp;2009-2016&nbsp;<a href={site.url}>{site.title}</a>&nbsp;All Rights Reserved!</span>
-          <span className="powered">Powered by Koa &amp; <a href="//www.lianyue.org" target="_blank">lianyue</a></span>
+          <span className="powered">Powered by Koa &amp; <a href="//www.lianyue.org" target="_blank">Lian Yue</a></span>
         </div>
       </footer>
       <div id="header-backdrop" onClick={this.onHeaderBackdrop}></div>

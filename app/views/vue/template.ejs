@@ -13,9 +13,12 @@
     <meta property="og:locale" content="zh_CN" />
     <meta property="og:site_name" content="<%= site.title %>" />
     <meta property="twitter:site" content="<%= site.title %>" />
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="<%= site.assets %>ie/index.js?v=<%= process.env.version %>"></script>
+    <![endif]-->
   </head>
   <body>
     <!--vue-ssr-outlet-->
-    <script type="text/javascript" src="<%= site.assets %>/vue/index.js?v=<%= process.env.version %>" async></script>
+    <script type="text/javascript" src="<%= site.assets %>vue/index.js?v=<%= process.env.version %>" async></script>
   </body>
 </html>

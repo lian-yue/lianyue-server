@@ -1,3 +1,4 @@
+import ES6Promise from 'es6-promise/auto'
 import moment from 'moment'
 
 
@@ -11,8 +12,6 @@ import {  Route } from 'react-router-dom'
 import { Provider } from 'react-redux'
 
 import Store from './store'
-import actions from './actions'
-
 
 require('./style')
 
@@ -28,8 +27,34 @@ const element = document.getElementById('app')
 
 
 
+module.exports = async function() {
+  if (!window.fetch) {
+    await import("whatwg-fetch")
+  }
+
+
+  await render();
+
+  // 不使用  react-router-redux  的 Router 优先级 bug 修复
+  history.listen(function(location) {
+    store.dispatch({
+       type: LOCATION_CHANGE,
+       payload: location
+     })
+  })
+
+  if(module.hot) {
+    module.hot.accept('./views/App', function() {
+      render();
+    });
+  }
+}
+
+
+
+
 var isReactTreeWalker
-export async function render() {
+async function render() {
 
 
   const App = require('./views/App').default;
@@ -56,52 +81,8 @@ export async function render() {
 
 
 
-module.exports = async function() {
-  if (!window.fetch) {
-    await new Promise(function(resolve, reject) {
-      require.ensure([], (require) => {
-        require("whatwg-fetch")
-        resolve(true)
-      }, 'fetch')
-    });
-  }
-
-  if (!window.Promise) {
-    await new Promise(function(resolve, reject) {
-      require.ensure([], (require) => {
-        require('es6-promise').polyfill();
-        resolve(true)
-      }, 'es6-promise')
-    });
-  }
-
-  await render();
-
-  // 不使用  react-router-redux  的 Router 优先级bug 修复
-  history.listen(function(location) {
-    store.dispatch({
-       type: LOCATION_CHANGE,
-       payload: location
-     })
-  })
-
-  if(module.hot) {
-    module.hot.accept('./views/App', function() {
-      render();
-    });
-  }
-}
-
-
-
-
-
-
-
-
-
 // https://github.com/ctrlplusb/react-tree-walker/blob/master/src/index.js
-async function reactTreeWalker(element, context = {}) {
+async function reactTreeWalker(element, context = {}, parentNode) {
   if (typeof element.type === 'function') {
     const Component = element.type;
     const props = Object.assign({}, Component.defaultProps, element.props);
@@ -155,7 +136,7 @@ async function reactTreeWalker(element, context = {}) {
 
     // Only continue walking if a child exists.
     if (child) {
-      await reactTreeWalker(child, childContext);
+      await reactTreeWalker(child, childContext, element);
     }
   } else {
     // This must be a basic element, such as a string or dom node.
@@ -169,12 +150,10 @@ async function reactTreeWalker(element, context = {}) {
         }
       });
       for (let i = 0; i < children.length; i++) {
-        await reactTreeWalker(children[i], context)
+        await reactTreeWalker(children[i], context, element)
       }
     }
   }
 }
-
-
 
 module.exports()

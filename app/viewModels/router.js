@@ -38,7 +38,6 @@ export default class Router {
       })
 
       delete ctx.state.vm
-      delete ctx.state.vmName
 
       ctx.params = {}
       if (method != ctx.request.method) {
@@ -81,7 +80,6 @@ export default class Router {
             }
           }
         }
-        ctx.state.vmName = route.name
       }
 
       // 处理中间件

@@ -11,7 +11,6 @@ export default class Loading extends Component {
   render () {
     return <div className={'loading ' + this.props.size + (this.props.middle ? ' middle' : '')}>
       <span className="circle">
-
       </span>
     </div>
   }

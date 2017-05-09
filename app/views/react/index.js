@@ -22,7 +22,7 @@ export default async function(ctx, next) {
     e.status = 404
     throw e;
   }
-
+  console.log(state.get('headers').get('status'))
   ctx.status = state.get('headers').get('status') || 200
   ctx.type = 'text/html'
   ctx.body = body
