@@ -17,7 +17,7 @@ function createRenderer() {
 var renderer = createRenderer()
 
 export default async function(ctx, next) {
-  if (['GET', 'HEAD'].indexOf(ctx.method) == -1 || (ctx.query.view && ctx.query.view != 'vue') || (ctx.query.view != 'vue' && ctx.cookies.get('view') != 'vue')) {
+  if (['GET', 'HEAD'].indexOf(ctx.method) == -1 || (ctx.query.view && ctx.query.view != 'vue')) {
     await next()
     return
   }
