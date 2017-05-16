@@ -3,18 +3,15 @@ import { Comment } from 'models'
 
 const ObjectId = Types.ObjectId
 
-export default async function(ctx, next, ctxQuery) {
+export default async function(ctx, next) {
   var e
   var post = ctx.state.post
   var token
-  var limit = 50
+  var limit = 5
   var sort = {
     index: 1,
   }
-
-  ctxQuery = ctxQuery || ctx.query
-
-  if (ctxQuery.desc) {
+  if (ctx.query.desc) {
     sort.index = -1
   }
 
@@ -22,13 +19,13 @@ export default async function(ctx, next, ctxQuery) {
   query.post = post.get('_id')
 
   query.deletedAt = {$exists: false}
-  if (ctxQuery.deleted && (token = await ctx.token()) && token.get('admin')) {
+  if (ctx.query.deleted && (token = await ctx.token()) && token.get('admin')) {
     query.deletedAt = {$exists: true}
   }
 
 
-  if (ctxQuery.index) {
-    var index = parseInt(ctxQuery.index)
+  if (ctx.query.index) {
+    var index = parseInt(ctx.query.index)
     if (isNaN(index) || index < 1) {
       index = 0
     }

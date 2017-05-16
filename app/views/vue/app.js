@@ -24,6 +24,7 @@ Object.keys(plugins).forEach(key => {
 })
 
 
+
 const app = new Vue({
   router,
   store,

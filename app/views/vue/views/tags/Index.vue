@@ -8,10 +8,10 @@
       </ul>
       <nav class="navigation pagination" role="navigation">
         <loading v-if="tagList.loading"></loading>
-        <a v-else-if="tagList.more" :href="$pageNext" class="more" @click="$pageMore" rel="next">加载更多</a>
+        <a v-else-if="tagList.more" :href="pageNext" class="more" @click="pageMore" rel="next">加载更多</a>
         <span v-else class="loaded">全部已加载完毕</span>
-        <router-link v-if="$route.page > 1" :to="$pagePrev" class="prev" rel="prev">上一页</router-link>
-        <router-link v-if="tagList.more" :to="$pageNext" class="next" rel="next">下一页</router-link>
+        <router-link v-if="$route.page > 1" :to="pagePrev" class="prev" rel="prev">上一页</router-link>
+        <router-link v-if="tagList.more" :to="pageNext" class="next" rel="next">下一页</router-link>
       </nav>
     </div>
   </section>
@@ -54,6 +54,7 @@ import { mapState } from 'vuex'
 
 import site from 'config/site'
 
+import pagination from '../../mixins/pagination'
 
 import {TAG_LIST} from '../../store/types'
 
@@ -68,6 +69,9 @@ export default {
     }
   },
 
+  mixins: [
+    pagination
+  ],
 
   watch: {
     $route() {

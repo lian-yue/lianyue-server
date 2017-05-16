@@ -1,0 +1,71 @@
+@import "variables"
+#comments-list
+  padding: 0
+  margin: 0
+  list-style: none
+  li
+    position: relative
+    margin-bottom: 1.6rem
+  .comment-admin
+    .author
+      &::before
+        content: '管理员: '
+      color: $red
+  .comment-author
+    position: absolute
+    left: 0
+    top: .7rem
+    img
+      width: 50px
+      height: 50px
+      @include border-radius($border-radius)
+  .comment-meta
+    font-size: .9rem
+    border-bottom: 1px dotted $border-color
+    padding: .4rem 0
+    .author,
+    strong
+      font-weight: bold
+    .title
+      a
+        font-weight: bold
+    time
+      color: $gray-light
+    a
+      color: $gray
+      &:hover,
+      &:active,
+        text-decoration: none
+        color: lighten($gray, 15%)
+    @include clearfix()
+    margin-left: 65px
+    .text
+      margin-right: 5rem
+      span
+        display: inline-block
+        padding-right: .5rem
+    .actions
+      float: right
+      a
+        display: inline-block
+        padding-left: .5rem
+  .comment-content
+    padding: .5rem 0
+    margin-left: 65px
+    min-height: 40px
+    h1,
+    h2,
+    h3
+      border-bottom: 0
+
+
+#comments-form
+  .reply-info
+    display: inline-block
+  .cancel-reply
+    &:hover,
+    &:active,
+    &:focus
+      text-decoration: none
+  #comment-content
+    height: 12em

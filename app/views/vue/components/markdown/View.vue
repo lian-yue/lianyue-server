@@ -3,7 +3,7 @@
 </div>
 </template>
 <style lang="sass">
-@import "../../views/sass/variables"
+@import "../../styles/variables"
 @import "~bootstrap/scss/tables"
 @import "~highlight.js/styles/atom-one-light.css"
 .markdown-content

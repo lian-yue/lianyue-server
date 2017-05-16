@@ -22,10 +22,10 @@
       </article>
       <nav class="navigation pagination" role="navigation">
         <loading v-if="postList.loading"></loading>
-        <a v-else-if="postList.more" :href="$pageNext" class="more" @click="$pageMore" rel="next">加载更多</a>
+        <a v-else-if="postList.more" :href="pageNext" class="more" @click="pageMore" rel="next">加载更多</a>
         <span v-else class="loaded">全部已加载完毕</span>
-        <router-link v-if="$route.page > 1" :to="$pagePrev" class="prev" rel="prev">上一页</router-link>
-        <router-link v-if="postList.more" :to="$pageNext" class="next" rel="next">下一页</router-link>
+        <router-link v-if="$route.page > 1" :to="pagePrev" class="prev" rel="prev">上一页</router-link>
+        <router-link v-if="postList.more" :to="pageNext" class="next" rel="next">下一页</router-link>
       </nav>
     </div>
   </section>
@@ -65,7 +65,9 @@ import { mapState } from 'vuex'
 
 import site from 'config/site'
 
-import {LINKS, POST_LIST, MESSAGES} from '../../store/types'
+import pagination from '../../mixins/pagination'
+
+import {LINKS, POST_LIST} from '../../store/types'
 
 const toUrl = Vue.filter('toUrl')
 
@@ -78,6 +80,9 @@ export default {
     }
   },
 
+  mixins: [
+    pagination
+  ],
 
   watch: {
     $route() {
@@ -134,18 +139,17 @@ export default {
           }
         })
       } catch (e) {
-        commit({
-          ...e,
-          name: 'popup',
-          type: MESSAGES,
-          message: e.message
-        })
+        e.name = 'popup'
+        commit(e)
       }
     }
   },
 
   computed: {
     linksExcerpt() {
+      if (!this.links.excerpt) {
+        return ''
+      }
       return '<h2 class="title">友情链接</h2>' + this.links.excerpt
     },
     ...mapState(['postList', 'links', 'token'])

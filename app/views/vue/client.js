@@ -2,7 +2,7 @@ import ES6Promise from 'es6-promise/auto'
 import moment from 'moment'
 import queryString from 'query-string'
 
-import { TOKEN } from './store/types'
+import { TOKEN, MESSAGES } from './store/types'
 
 moment.locale('zh-cn');
 
@@ -16,49 +16,66 @@ module.exports = async function() {
     store.replaceState(window.__INITIAL_STATE__)
   }
 
+  router.beforeEach(function(to, from, next) {
+    if (to.meta.admin && !store.state.token.admin) {
+      next({
+        path: '/admin',
+        query: {message: '401', redirect_uri: to.fullPath}
+      })
+    } else {
+      next()
+    }
+  })
+
+
   store.commit.fetch = async function (path, query, body) {
     var opt = {}
     opt.headers = {}
 
-    if (body && typeof body == 'object') {
-      if (!store.state.token._id) {
-        await store.dispatch({
-          type: TOKEN,
-          create: 1,
-        })
+    try {
+      if (body && typeof body == 'object') {
+        if (!store.state.token._id) {
+          await store.dispatch({
+            type: TOKEN,
+            create: 1,
+          })
+        }
+        body = queryString.stringify(Object.assign({}, body, {view: 'json', _token: store.state.token._id}))
       }
-      body = queryString.stringify(Object.assign({}, body, {view: 'json', _token: store.state.token._id}))
-    }
 
-    if (query && typeof query == 'object') {
-      query = queryString.stringify(body ? query : Object.assign({}, query, {view : 'json'}))
-    }
-
-    if (body) {
-      opt.method = 'POST'
-      opt.headers['Content-Type'] = "application/x-www-form-urlencoded"
-    }
-
-    if (body) {
-      opt.body = body
-    }
-    opt.credentials = opt.credentials || 'same-origin'
-    opt.timeout = 10000
-
-    var response = await fetch(path + (query ? '?' + query : ''), opt).then((response) => {
-      if (response.status == 204) {
-        return {}
+      if (query && typeof query == 'object') {
+        query = queryString.stringify(body ? query : Object.assign({}, query, {view : 'json'}))
       }
-      return response.json(true)
-    })
-    if (response.messages) {
-      var err = new Error
-      for (var key in response) {
-        err[key] = response[key]
+
+      if (body) {
+        opt.method = 'POST'
+        opt.headers['Content-Type'] = "application/x-www-form-urlencoded"
       }
-      throw err
+
+      if (body) {
+        opt.body = body
+      }
+      opt.credentials = opt.credentials || 'same-origin'
+      opt.timeout = 10000
+
+      var response = await fetch(path + (query ? '?' + query : ''), opt).then((response) => {
+        if (response.status == 204) {
+          return {}
+        }
+        return response.json(true)
+      })
+      if (response.messages) {
+        var err = new Error
+        for (var key in response) {
+          err[key] = response[key]
+        }
+        throw err
+      }
+      return response
+    } catch (e) {
+      e.type = MESSAGES
+      throw e
     }
-    return response
   }
 
   router.onReady(() => {

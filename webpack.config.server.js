@@ -287,6 +287,7 @@ const vue = merge(base({name: 'vue', externals: '../../'}), {
                     "stage-0"
                   ],
                   plugins: [
+                    "transform-vue-jsx",
                     "transform-decorators-legacy",
                     "transform-runtime",
                   ],

@@ -62,10 +62,30 @@ const tagRead = module(
 )
 
 
+const commentList = module(
+  types.COMMENT_LIST,
+  types.COMMENT_LIST_CLEAR,
+  {
+    results: [],
+    post: {},
+    more: true,
+  }
+)
+
+const commentRead = module(
+  types.COMMENT_READ,
+  types.COMMENT_READ_CLEAR,
+  {
+  }
+)
+
+
 export {
   links,
   postList,
   postRead,
   tagList,
   tagRead,
+  commentList,
+  commentRead,
 }

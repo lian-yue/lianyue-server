@@ -1,9 +1,8 @@
 import { app, router, store } from './app'
-import {PROTOCOL , TOKEN, HEADERS} from './store/types'
+import {PROTOCOL, TOKEN, HEADERS, MESSAGES} from './store/types'
 
 
 export default async function(context) {
-
   var ctx = context.ctx
   router.push(ctx.url)
   store.commit({
@@ -18,6 +17,19 @@ export default async function(context) {
     })
   }
 
+
+  router.beforeEach(function(to, from, next) {
+    if (to.meta.admin && !store.state.token.admin) {
+      next({
+        path: '/admin',
+        query: {message: '401', redirect_uri: to.fullPath}
+      })
+    } else {
+      next()
+    }
+  })
+
+
   store.commit.fetch = async function (path, query, body) {
     query = query || {}
     if (typeof query != 'object') {
@@ -27,6 +39,7 @@ export default async function(context) {
       return await ctx.viewModel(body ? 'POST' : 'GET', path, query, body).then(state => toJSONObject(state))
     } catch (err) {
       ctx.app.emit('error', err, ctx);
+      err.type = MESSAGES
       throw err
     }
   }

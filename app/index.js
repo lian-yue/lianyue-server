@@ -113,6 +113,8 @@ export default function() {
     };
     data = Object.assign(state, data);
 
+    ctx.type = 'json'
+    ctx.set("X-Content-Type-Options", 'nosniff')
     ctx.res.end(JSON.stringify(data));
   };
 
@@ -274,10 +276,10 @@ export default function() {
     })
 
     app.use(function(ctx, next) {
-      return require('views/vue').default(ctx, next)
+      return require('views/xml').default(ctx, next)
     });
     app.use(function(ctx, next) {
-      return require('views/xml').default(ctx, next)
+      return require('views/vue').default(ctx, next)
     });
     app.use(function(ctx, next) {
       return require('views/react').default(ctx, next)
@@ -286,8 +288,8 @@ export default function() {
       return require('viewModels').default.middleware(ctx, next)
     });
   } else {
-    app.use(require('views/vue').default);
     app.use(require('views/xml').default);
+    app.use(require('views/vue').default);
     app.use(require('views/react').default);
     app.use(require('viewModels').default.middleware);
   }

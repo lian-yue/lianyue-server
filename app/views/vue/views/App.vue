@@ -85,7 +85,9 @@ const MessagesPopup = {
         this.timrer = null
       }
       e && e.preventDefault()
-      this.$store.commit({type: MESSAGES_CLOSE, name: 'popup'})
+      if (this.messages.popup && !this.messages.popup.close) {
+        this.$store.commit({type: MESSAGES_CLOSE, name: 'popup'})
+      }
     }
   },
   computed: mapState(['messages', 'route']),
@@ -192,7 +194,7 @@ export default {
   mounted() {
     this.github = '//github.com/lian-yue'
     this.email = 'mailto:' + site.email
-    this.feed = '/?view=json'
+    this.feed = '/?view=xml'
     window.addEventListener('resize', this.onResize)
 
     this.onResize()

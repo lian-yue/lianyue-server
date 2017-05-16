@@ -2,7 +2,7 @@
 <main>
   <section id="content">
     <form id="posts-editor" role="form" method="post" class="form-horizontal" @submit="onSubmit" autocomplete="off">
-      <messages></messages>
+      <messages/>
       <div class="form-group">
         <label for="title" class="form-label">标题: </label>
         <input type="text" class="form-control" name="title" v-model="title" id="title" placeholder="在此输入标题"  maxlength="64" required />
@@ -53,7 +53,7 @@ import { mapState } from 'vuex'
 import site from 'config/site'
 
 
-import {POST_READ, MESSAGES} from '../../store/types'
+import {POST_READ} from '../../store/types'
 import MarkdownEditor from '../../components/markdown/Editor'
 import TagsInput from '../../components/TagsInput'
 
@@ -127,11 +127,7 @@ export default {
         var result = await commit.fetch('/' + (slug ? slug : 'create'), {}, body)
         this.$router.push(result.url + '?message=' + (slug ? 'update' : 'create') + '&r='+ Date.now())
       } catch (e) {
-        commit({
-          ...e,
-          type: MESSAGES,
-          message: e.message
-        })
+        commit(e)
       } finally {
         this.submitting = false
       }

@@ -37,7 +37,7 @@ import { mapState } from 'vuex'
 
 import site from 'config/site'
 
-import {TAG_READ, MESSAGES} from '../../store/types'
+import {TAG_READ} from '../../store/types'
 
 
 import MarkdownEditor from '../../components/markdown/Editor'
@@ -108,11 +108,7 @@ export default {
         var result = await commit.fetch('/tags/' + (tag ? tag : 'create'), {}, body)
         this.$router.push(result.postUrl + '?message=' + (tag ? 'update' : 'create') + '&r='+ Date.now())
       } catch (e) {
-        commit({
-          ...e,
-          type: MESSAGES,
-          message: e.message
-        })
+        commit(e)
       } finally {
         this.submitting = false
       }

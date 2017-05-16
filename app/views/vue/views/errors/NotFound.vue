@@ -51,6 +51,7 @@ export default {
   headers({state}) {
     var title = '错误消息'
     return {
+      status: 404,
       title: [title, site.title],
       meta: [
         {name: 'robots', content:'none'},

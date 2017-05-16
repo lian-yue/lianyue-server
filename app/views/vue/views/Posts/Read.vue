@@ -39,6 +39,7 @@
       </nav>
     </div>
   </section>
+  <comment-section v-if="!postRead.loading && postRead._id" class="comments-inline"></comment-section>
   <section id="admin-menu" v-if="token.admin && postRead._id">
     <ul id="admin-menu-fixed" class="nav flex-column">
       <li class="nav-item">
@@ -61,7 +62,8 @@ import { mapState } from 'vuex'
 
 import site from 'config/site'
 
-import {POST_READ, MESSAGES} from '../../store/types'
+import {POST_READ} from '../../store/types'
+import CommentSection from './CommentSection'
 
 const toUrl = Vue.filter('toUrl')
 const fromDate = Vue.filter('fromDate')
@@ -75,8 +77,13 @@ export default {
     }
   },
 
+  components: {
+    CommentSection
+  },
+
   methods: {
-    async fetch({state, dispatch, commit}) {
+    async fetch(store) {
+      const {state, dispatch, commit} = store
       var route = state.route
 
       await dispatch({
@@ -85,6 +92,9 @@ export default {
         query: route.query,
         fullPath: route.fullPath.split('#')[0],
       })
+      if (__SERVER__) {
+        await CommentSection.methods.fetch(store)
+      }
     },
 
     fetchAuto() {
@@ -108,12 +118,8 @@ export default {
           }
         })
       } catch (e) {
-        commit({
-          ...e,
-          name: 'popup',
-          type: MESSAGES,
-          message: e.message
-        })
+        e.name = 'popup'
+        commit(e)
       }
     }
   },
@@ -141,6 +147,7 @@ export default {
     if (!post._id) {
       headers.status = 404
       headers.statistics = false
+      headers.title.push('文章内容', site.title)
       headers.breadcrumb.push('文章内容')
       return headers
     }

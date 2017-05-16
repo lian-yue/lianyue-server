@@ -33,9 +33,12 @@ export default {
   },
   methods: {
     onClose(e) {
-      e.preventDefault()
+      e && e.preventDefault()
       this.$store.commit({type: MESSAGES_CLOSE, name: this.name})
     }
   },
+  beforeDestroy() {
+    this.onClose()
+  }
 }
 </script>

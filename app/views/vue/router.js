@@ -4,10 +4,12 @@ import Router from 'vue-router'
 Vue.use(Router)
 
 
-export default new Router({
+const router = new Router({
   mode: 'history',
   fallback: false,
-  scrollBehavior: () => ({ y: 0 }),
+  scrollBehavior()  {
+    return { y: 0 }
+  },
   routes: [
     {
       path: '/tags',
@@ -16,10 +18,16 @@ export default new Router({
     {
       path: '/tags/create',
       component: () => import('./views/tags/Editor'),
+      meta: {
+        admin: true
+      },
     },
     {
       path: '/tags/:tag/update',
       component: () => import('./views/tags/Editor'),
+      meta: {
+        admin: true
+      },
     },
 
     {
@@ -29,6 +37,9 @@ export default new Router({
     {
       path: '/comments',
       component: () => import('./views/Comment'),
+      meta: {
+        admin: true
+      },
     },
 
     {
@@ -38,6 +49,9 @@ export default new Router({
     {
       path: '/create',
       component: () => import('./views/posts/Editor'),
+      meta: {
+        admin: true
+      },
     },
     {
       path: '/:slug',
@@ -50,6 +64,9 @@ export default new Router({
     {
       path: '/:slug/update',
       component: () => import('./views/posts/Editor'),
+      meta: {
+        admin: true
+      },
     },
     {
       path: '/',
@@ -61,3 +78,4 @@ export default new Router({
     },
   ]
 })
+export default router
